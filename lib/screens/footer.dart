@@ -5,7 +5,7 @@ import 'package:tooth_tales/screens/user/homepage.dart';
 import 'ChatsAndTips/chat.dart';
 import 'login.dart';
 import 'ChatsAndTips/chat.dart';
-import 'user/patientProfile.dart';
+import 'user/Profile/patientProfile.dart';
 
 class FooterScreen extends StatelessWidget {
   @override

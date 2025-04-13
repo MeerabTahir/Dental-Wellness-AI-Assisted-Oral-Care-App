@@ -1,12 +1,12 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../login.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:intl/intl.dart';
-import './appointmentsPage.dart';
-import './dentistQuery.dart';
-import 'changepassword.dart';
+
+import '../login.dart';
+import 'All Appointments/appointmentsPage.dart';
+import 'Change Password/changepassword.dart';
 
 class DoctorHomePage extends StatefulWidget {
   const DoctorHomePage({Key? key}) : super(key: key);
@@ -25,23 +25,18 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
   void initState() {
     super.initState();
     fetchUserData();
-    _getCurrentDate();
   }
 
   Future<void> fetchUserData() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
+        DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
           setState(() {
             userName = userDoc.get('userName');
           });
-        } else {
-          print('User document does not exist');
         }
       }
     } catch (e) {
@@ -49,243 +44,265 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     }
   }
 
-  void _getCurrentDate() {
-    final DateTime now = DateTime.now();
-    final DateFormat dateFormat = DateFormat("EEEE, MMM dd, yyyy");
-    setState(() {
-      currentDate = dateFormat.format(now);
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
-    var height = MediaQuery.of(context).size.height;
-    var width = MediaQuery.of(context).size.width;
-
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Text(
-          'Doctor Dashboard',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: "GoogleSans",
-            fontSize: 20,
-          ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Treat Your',
+                style: TextStyle(fontFamily: 'GoogleSans', fontSize: 22)),
+            Text(' Patient',
+                style: TextStyle(
+                    fontFamily: 'GoogleSans',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold)),
+          ],
         ),
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: () {
-            _scaffoldKey.currentState!.openDrawer();
-          },
-          color: Colors.white,
+          color: Colors.black,
+          onPressed: () => _scaffoldKey.currentState!.openDrawer(),
         ),
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.blue),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 35,
-                    backgroundImage: imageUrl != null
-                        ? NetworkImage(imageUrl!)
-                        : const AssetImage('assets/Images/avatar.png') as ImageProvider,
+      drawer: _buildDrawer(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+
+            const SizedBox(height: 10),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: CarouselSlider(
+                options: CarouselOptions(
+                  height: 160,
+                  autoPlay: true,
+                  enlargeCenterPage: true,
+                  viewportFraction: 0.98,
+                  autoPlayInterval: Duration(seconds: 3),
+                ),
+                items: [
+                  buildSimpleCarouselCard(
+                    text: "Provide treatment to the Dental Patient",
+                    color: Colors.orangeAccent.shade400,
+                    imagePath: "assets/Images/dentalpatient.png",
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    userName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontFamily: "GoogleSans",
-                    ),
+                  buildSimpleCarouselCard(
+                    text: "Answer the little Queries of the Users",
+                    color: Colors.purpleAccent.shade400,
+                    imagePath: "assets/Images/queries.png",
+                  ),
+                  buildSimpleCarouselCard(
+                    text: "Manage all Appointments Easily & On Time",
+                    color: Colors.teal.shade400,
+                    imagePath: "assets/Images/newappoint.png",
                   ),
                 ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile', style: TextStyle(fontFamily: "GoogleSans")),
-              onTap: () {
-                Navigator.pushNamed(context, '/doctor-profile');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout', style: TextStyle(fontFamily: "GoogleSans")),
-              onTap: () {
-                FirebaseAuth.instance.signOut().then((value) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
-                        (route) => false,
-                  );
-                });
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.lock),
-              title: const Text('Change Password', style: TextStyle(fontFamily: "GoogleSans")),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ChangePasswordPage()),
-                );
-              },
-            ),
 
+            const SizedBox(height: 20),
+
+            // Welcome Message
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  userName.isNotEmpty ? 'Hello, Dr. $userName!' : 'Hello!',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: "GoogleSans"),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Manage appointments and queries easily.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            // Action Grid
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1,
+                ),
+                children: [
+                  _buildDashboardTile(
+                    icon: Icons.calendar_today,
+                    label: "Appointments",
+                    color: Colors.blueAccent,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AppointmentsPage()),
+                    ),
+                  ),
+                  _buildDashboardTile(
+                    icon: Icons.question_answer,
+                    label: "Patient Queries",
+                    color: Colors.pinkAccent,
+                    onTap: () => Navigator.pushNamed(context, '/dentist-queries'),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Current Date
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.blueGrey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today, color: Colors.blue, size: 30),
-                  const SizedBox(width: 10),
-                  Text(
-                    currentDate,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "GoogleSans",
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Welcome Card
-            Card(
-              color: Colors.blue.shade200,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userName.isNotEmpty ? 'Hello, $userName!' : 'Hello!',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: "GoogleSans",
-                              color: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            "Manage appointments and patient care seamlessly.",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontFamily: "GoogleSans",
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+    );
+  }
+  Widget buildSimpleCarouselCard({
+    required String text,
+    required Color color,
+    required String imagePath,
+  }) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 6),
+      height: 120,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: "GoogleSans",
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-
-            // Action Buttons
-            Row(
+          ),
+          Expanded(
+            flex: 2,
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                bottomRight: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Image.asset(
+                  imagePath,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.fitHeight,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Drawer _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.blue),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // View Appointments
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AppointmentsPage()),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.purple.shade200,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.calendar_today, color: Colors.white, size: 35),
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Appointments',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: "GoogleSans",
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                CircleAvatar(
+                  radius: 35,
+                  backgroundImage: imageUrl != null
+                      ? NetworkImage(imageUrl!)
+                      : const AssetImage('assets/Images/avatar.png') as ImageProvider,
                 ),
-                const SizedBox(width: 15),
-
-                // Patient Queries
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/dentist-queries');
-                    },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 16.0),
-                    decoration: BoxDecoration(
-                      color: Colors.pink.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.question_answer, color: Colors.white, size: 35),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Patient Queries',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: "GoogleSans",
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                const SizedBox(height: 10),
+                Text(
+                  userName,
+                  style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: "GoogleSans"),
                 ),
               ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Profile', style: TextStyle(fontFamily: "GoogleSans")),
+            onTap: () => Navigator.pushNamed(context, '/doctor-profile'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.lock),
+            title: const Text('Change Password', style: TextStyle(fontFamily: "GoogleSans")),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChangePasswordPage())),
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout', style: TextStyle(fontFamily: "GoogleSans")),
+            onTap: () {
+              FirebaseAuth.instance.signOut().then((_) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false,
+                );
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDashboardTile({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 25,
+              backgroundColor: color.withOpacity(0.2),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, fontFamily: "GoogleSans"),
             ),
           ],
         ),

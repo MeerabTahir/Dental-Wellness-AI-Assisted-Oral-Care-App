@@ -7,12 +7,14 @@ class ReusableTextField extends StatefulWidget {
   final bool isPasswordType;
   final TextEditingController controller;
 
+
   const ReusableTextField({
     Key? key,
     required this.text,
     required this.icon,
     required this.isPasswordType,
     required this.controller,
+
   }) : super(key: key);
 
   @override
@@ -51,6 +53,7 @@ class _ReusableTextFieldState extends State<ReusableTextField> {
         filled: true,
         floatingLabelBehavior: FloatingLabelBehavior.never,
         fillColor: Colors.white.withOpacity(0.3),
+
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: const BorderSide(color: Colors.black, width: 1), // Black border

@@ -2,8 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/email_service.dart';
-import '../../services/firestore_service.dart';
+import '../../../services/email_service.dart';
+import '../../../services/firestore_service.dart';
 import 'package:tooth_tales/models/userModel.dart';
 
 class DoctorRegisterPage extends StatefulWidget {

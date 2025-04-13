@@ -14,9 +14,51 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _passwordTextController.addListener(_validatePassword);
+  }
+
   final TextEditingController _passwordTextController = TextEditingController();
   final TextEditingController _emailTextController = TextEditingController();
   final TextEditingController _userNameTextController = TextEditingController();
+
+  List<String> _passwordErrors = [];
+
+  bool _isPasswordValid(String password) {
+    // Minimum 8 characters, at least one uppercase, one lowercase, one number, and one special character
+    final passwordRegExp = RegExp(
+        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+    );
+    return passwordRegExp.hasMatch(password);
+  }
+
+  void _validatePassword() {
+    final password = _passwordTextController.text;
+    final List<String> errors = [];
+
+    if (password.length < 8) {
+      errors.add("Must be at least 8 characters");
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      errors.add("Must contain an uppercase letter");
+    }
+    if (!RegExp(r'[a-z]').hasMatch(password)) {
+      errors.add("Must contain a lowercase letter");
+    }
+    if (!RegExp(r'\d').hasMatch(password)) {
+      errors.add("Must contain a number");
+    }
+    if (!RegExp(r'[!@#\$&*~]').hasMatch(password)) {
+      errors.add("Must contain a special character (!@#\$&*~)");
+    }
+
+    setState(() {
+      _passwordErrors = errors;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +124,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   isPasswordType: true,
                   controller: _passwordTextController,
                 ),
+                ..._passwordErrors.map((e) => Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.close, color: Colors.red, size: 16),
+                      const SizedBox(width: 6),
+                      Text(e, style: const TextStyle(color: Colors.red, fontSize: 14, fontFamily: "GoogleSans")),
+                    ],
+                  ),
+                )),
+
 
                 SizedBox(height: 20),
                 signInSignUpButton(context, false, _registerUser),
@@ -95,6 +148,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _registerUser() async {
+    if (!_isPasswordValid(_passwordTextController.text)) {
+      _showCustomSnackBar(
+        context,
+        'Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.',
+        Colors.red,
+      );
+      return;
+    }
+
     try {
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailTextController.text,
@@ -102,13 +164,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       String userId = userCredential.user!.uid;
-      print('Newly registered user ID: $userId');
 
       UserAccounts userAccount = UserAccounts(
         id: userId,
         userName: _userNameTextController.text,
         password: _passwordTextController.text,
-        isDoctor: false,  // Set this to false as doctor functionality is removed
+        isDoctor: false,
       );
 
       await FirestoreService<UserAccounts>('users').addItemWithId(userAccount, userId);
@@ -124,6 +185,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _showCustomSnackBar(context, 'Error registering user', Colors.red);
     }
   }
+
 
   void _showCustomSnackBar(BuildContext context, String message, Color color) {
     final snackBar = SnackBar(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:tooth_tales/screens/user/patientProfile.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:tooth_tales/screens/user/Profile/patientProfile.dart';
+
 import '../login.dart';
 import '../footer.dart';
-import './feedback.dart'; // Import Feedback Screen
+import 'Feedback & Query/feedback.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -14,7 +16,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String userName = '';
   ScrollController _scrollController = ScrollController();
 
@@ -36,8 +37,6 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             userName = userDoc.get('userName');
           });
-        } else {
-          print('User document does not exist');
         }
       }
     } catch (e) {
@@ -51,22 +50,25 @@ class _HomePageState extends State<HomePage> {
     var width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(
-          'Homepage',
-          style: TextStyle(fontFamily: 'GoogleSans'),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {
-            _scaffoldKey.currentState!.openDrawer();
-          },
+        backgroundColor: Colors.white70,
+        elevation: 0,
+        centerTitle: false,
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Find Your',
+                style: TextStyle(fontFamily: 'GoogleSans', fontSize: 22)),
+            Text(' Dentist',
+                style: TextStyle(
+                    fontFamily: 'GoogleSans',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold)),
+          ],
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout, color: Colors.white),
+            icon: Icon(Icons.logout, color: Colors.black),
             onPressed: () {
               FirebaseAuth.instance.signOut().then((value) {
                 Navigator.pushAndRemoveUntil(
@@ -74,8 +76,6 @@ class _HomePageState extends State<HomePage> {
                   MaterialPageRoute(builder: (context) => LoginScreen()),
                       (route) => false,
                 );
-              }).catchError((e) {
-                print('Error signing out: $e');
               });
             },
           ),
@@ -92,26 +92,34 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Text(
                     userName.isNotEmpty ? 'Hello, $userName!' : 'Hello!',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'GoogleSans'),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontFamily: 'GoogleSans'),
                   ),
                   SizedBox(height: 10),
                   Text(
                     'Do oral examinations and consult our best dentists.',
-                    style: TextStyle(color: Colors.white70, fontSize: 16, fontFamily: 'GoogleSans'),
+                    style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        fontFamily: 'GoogleSans'),
                   ),
                 ],
               ),
             ),
             ListTile(
               leading: Icon(Icons.article),
-              title: Text('Articles', style: TextStyle(fontFamily: 'GoogleSans')),
+              title:
+              Text('Articles', style: TextStyle(fontFamily: 'GoogleSans')),
               onTap: () {
                 Navigator.pushNamed(context, '/articles');
               },
             ),
             ListTile(
               leading: Icon(Icons.person),
-              title: Text('Profile', style: TextStyle(fontFamily: 'GoogleSans')),
+              title:
+              Text('Profile', style: TextStyle(fontFamily: 'GoogleSans')),
               onTap: () {
                 Navigator.push(
                   context,
@@ -121,7 +129,8 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: Icon(Icons.feedback),
-              title: Text('Feedback', style: TextStyle(fontFamily: 'GoogleSans')),
+              title:
+              Text('Feedback', style: TextStyle(fontFamily: 'GoogleSans')),
               onTap: () {
                 Navigator.push(
                   context,
@@ -131,7 +140,8 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: Icon(Icons.logout),
-              title: Text('Logout', style: TextStyle(fontFamily: 'GoogleSans')),
+              title:
+              Text('Logout', style: TextStyle(fontFamily: 'GoogleSans')),
               onTap: () {
                 FirebaseAuth.instance.signOut().then((value) {
                   Navigator.pushAndRemoveUntil(
@@ -147,117 +157,293 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      body: Container(
-        color: Colors.white,
-        height: height,
-        width: width,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              child: Container(
-                width: width - 32,
-                height: 150,
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userName.isNotEmpty ? 'Hello, $userName!' : 'Hello!',
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'GoogleSans'),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            'Welcome to the Dental',
-                            style: TextStyle(fontSize: 16, color: Colors.white, fontFamily: "GoogleSans"),
-                          ),
-                          Text(
-                            'Wellness you get all',
-                            style: TextStyle(fontSize: 16, color: Colors.white,fontFamily: "GoogleSans"),
-                          ),
-                          Text(
-                            'services here.',
-                            style: TextStyle(fontSize: 16, color: Colors.white,fontFamily: "GoogleSans"),
-                          )],
-                      ),
-                      Spacer(),
-                      Image.asset(
-                        'assets/Images/dentisthomes.png',
-                        height: 100,
-                        width: 150,
-                      ),
-                    ],
+      body: SingleChildScrollView(
+        controller: _scrollController,
+        child: Container(
+          color: Colors.grey[50],
+          width: width,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: CarouselSlider(
+                  options: CarouselOptions(
+                    height: 160,
+                    autoPlay: true,
+                    enlargeCenterPage: true,
+                    viewportFraction: 0.96,
+                    autoPlayInterval: Duration(seconds: 3),
                   ),
+                  items: [
+                    buildSimpleCarouselCard(
+                      text: "You are Looking for your Desired Dentist?",
+                      color: Colors.orangeAccent.shade400,
+                      imagePath: "assets/Images/doctor1.png",
+                    ),
+                    buildSimpleCarouselCard(
+                      text: "Detect Oral Diseases Early – Visit Us Today!",
+                      color: Colors.red.shade400,
+                      imagePath: "assets/Images/mouth.png",
+                    ),
+                    buildSimpleCarouselCard(
+                      text: "Book Appointments Easily & On Time",
+                      color: Colors.teal.shade400,
+                      imagePath: "assets/Images/newappoint.png",
+                    ),
+                  ],
                 ),
               ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
-                  ),
-                  child: Column(
-                    children: [
-                      GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.all(16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('All Categories',
+                        style: TextStyle(
+                            fontFamily: 'GoogleSans',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold)),
+                    SizedBox(height: 10),
+                    SizedBox(
+                      height: 130,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
                         children: [
-                          buildFeatureTile(context, Icons.calendar_today, "Book Appointment", '/doctor', Colors.blue.shade200),
-                          buildFeatureTile(context, Icons.list_alt, "My Appointments", '/schedule', Colors.pink.shade200),
-                          buildFeatureTile(context, Icons.health_and_safety, "Oral Examination", '/oralexamination', Colors.purple.shade200),
-                          buildFeatureTile(context, Icons.chat, "Ask Questions", '/questions', Colors.orange.shade200),
-
+                          buildFeatureTile(context, Icons.calendar_today,
+                              "Book \nAppointment", '/doctor', Colors.blueAccent),
+                          SizedBox(width: 12),
+                          buildFeatureTile(context, Icons.list_alt,
+                              "My \nAppointments", '/schedule', Colors.pinkAccent),
+                          SizedBox(width: 12),
+                          buildFeatureTile(context, Icons.health_and_safety,
+                              "Oral \nExamination", '/oralexamination', Colors.orange),
+                          SizedBox(width: 12),
+                          buildFeatureTile(context, Icons.chat,
+                              "Ask \nQuestions", '/questions', Colors.deepPurple),
                         ],
                       ),
-                      SizedBox(height: 20),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Our Dentists',
+                            style: TextStyle(
+                                fontFamily: 'GoogleSans',
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold)),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/doctor');
+                          },
+                          child: Text('See All',
+                              style: TextStyle(
+                                  fontFamily: 'GoogleSans',
+                                  fontSize: 14,
+                                  color: Colors.blue)),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .where('isDoctor', isEqualTo: true)
+                          .limit(4) // Show just a few for preview
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return Text("No dentists available.");
+                        }
+
+                        var doctorDocs = snapshot.data!.docs;
+
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.85,
+                          ),
+                          itemCount: doctorDocs.length,
+                          itemBuilder: (context, index) {
+                            var doc = doctorDocs[index];
+                            String name = doc['userName'] ?? 'Unknown';
+                            String specialization = doc['specialization'] ?? 'Dentist';
+                            String location= doc['location'] ?? 'Location Not specified';
+                            String imageUrl = doc['profileImage'] ?? 'https://via.placeholder.com/150';
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(context, '/desc', arguments: {'doctorId': doc[index].id,});
+                              },
+                              child: Card(
+                                elevation: 3,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 35,
+                                      backgroundImage: NetworkImage(imageUrl),
+                                    ),
+                                    SizedBox(height: 10),
+                                    Text(
+                                      name,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        fontFamily: 'GoogleSans',
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      specialization,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[700],
+                                        fontFamily: 'GoogleSans',
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      location,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[700],
+                                        fontFamily: 'GoogleSans',
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+
+                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: FooterScreen(),
     );
   }
 
-  Widget buildFeatureTile(BuildContext context, IconData icon, String title, String route, Color cardColor) {
-    return InkWell(
-      onTap: () {
-        Navigator.pushNamed(context, route);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 50, color: Colors.white),
-              SizedBox(height: 10),
-              Text(
-                title,
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+  Widget buildSimpleCarouselCard({
+    required String text,
+    required Color color,
+    required String imagePath,
+  }) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 6),
+      height: 120,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: "GoogleSans",
+                ),
               ),
-            ],
+            ),
           ),
+          Expanded(
+            flex: 2,
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                bottomRight: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Image.asset(
+                  imagePath,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.fitHeight,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildFeatureTile(BuildContext context, IconData icon, String title,
+      String route, Color iconColor) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, route),
+      child: Container(
+        width: 110,
+        height: 110,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: iconColor.withOpacity(0.5),
+                    spreadRadius: 1,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                size: 30,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

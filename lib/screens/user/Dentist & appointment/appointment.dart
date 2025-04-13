@@ -33,9 +33,6 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
-
-  // get phoneno => null;
-
   @override
   void initState() {
     super.initState();
@@ -65,7 +62,6 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
   void _generateSubSlots() {
     availableSubSlots.clear();
-
     String startTime = widget.selectedSlot['start']!;
     String endTime = widget.selectedSlot['end']!;
 
@@ -112,7 +108,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
       String name = _nameController.text.trim();
       String age = _ageController.text.trim();
-      String phone = _phoneController.text.trim(); // Correct variable
+      String phone = _phoneController.text.trim();
 
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) {
@@ -129,7 +125,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           doctorName: doctorData['userName'],
           patientName: name,
           patientAge: age,
-          phoneNo: phone, // Use the validated phone number
+          phoneNo: phone,
           timestamp: Timestamp.now(),
           userId: userId,
           appointmentTime: "$formattedDate at $selectedSubSlot",
@@ -154,16 +150,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
-          'Book Appointment',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'GoogleSans',
-
-          ),
-        ),
+        title: Text('Book Appointment', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
-        elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
       ),
       body: Padding(
@@ -176,69 +164,52 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Appointment with Dr. ${doctorData['userName']}',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                          fontFamily: 'GoogleSans',
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        '${doctorData['profession'] ?? 'N/A'}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                          fontFamily: 'GoogleSans',
-                        ),
-                      ),
-                    ],
-                  ),
+                Text(
+                  'Appointment with Dr. ${doctorData['userName']}',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  doctorData['profession'] ?? '',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
                 SizedBox(height: 20),
                 Text(
                   'Patient Details',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                    fontFamily: 'GoogleSans',
-                  ),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue),
                 ),
                 SizedBox(height: 10),
                 _buildInputField(
                   controller: _nameController,
                   label: 'Patient Name',
-                  hint: 'Enter patient name',
+                  hint: 'Enter full name',
                   icon: Icons.person,
                 ),
                 SizedBox(height: 10),
                 _buildInputField(
                   controller: _ageController,
-                  label: 'Patient Age',
-                  hint: 'Enter patient age',
-                  icon: Icons.calendar_today,
+                  label: 'Age',
+                  hint: 'Enter age',
+                  icon: Icons.cake,
                   keyboardType: TextInputType.number,
                 ),
                 SizedBox(height: 10),
                 _buildInputField(
                   controller: _phoneController,
                   label: 'Phone Number',
-                  hint: 'Enter phone number (e.g., 01712345678)',
+                  hint: 'Enter 11-digit phone number',
                   icon: Icons.phone,
                   keyboardType: TextInputType.phone,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter phone number';
                     }
-                    // Check if phone number is numeric and has 11 digits
                     if (!RegExp(r'^[0-9]{11}$').hasMatch(value)) {
                       return 'Enter a valid 11-digit phone number';
                     }
@@ -246,21 +217,19 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                   },
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(11), // Changed from 10 to 11
+                    LengthLimitingTextInputFormatter(11),
                   ],
                 ),
                 SizedBox(height: 20),
                 Text(
                   'Appointment Details',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                    fontFamily: 'GoogleSans',
-                  ),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue),
                 ),
                 SizedBox(height: 10),
-                _buildDropdown(
+                _buildStyledDropdown(
                   value: selectedDate,
                   hint: 'Select Appointment Date',
                   items: availableDates,
@@ -271,13 +240,13 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                   },
                 ),
                 SizedBox(height: 10),
-                _buildDropdown(
+                _buildStyledDropdown(
                   value: selectedSubSlot,
                   hint: 'Select Time Slot',
                   items: availableSubSlots,
                   onChanged: (value) {
                     setState(() {
-                      selectedSubSlot = value!;
+                      selectedSubSlot = value;
                     });
                   },
                 ),
@@ -290,21 +259,18 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                       padding: EdgeInsets.symmetric(
                           horizontal: 40, vertical: 15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        // elevation: 5,
-                      ),),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     child: Text(
                       'Book Appointment',
                       style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        // fontWeight: FontWeight.bold,
-                        fontFamily: 'GoogleSans',
-                      ),
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
-
               ],
             ),
           ),
@@ -325,29 +291,20 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   }) {
     return TextFormField(
       controller: controller,
+      keyboardType: keyboardType,
+      validator: validator,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(icon, color: Colors.blue),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.blue!),
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      keyboardType: keyboardType,
-      validator: validator,
-      inputFormatters: inputFormatters,
     );
   }
-  Widget _buildDropdown({
+
+  Widget _buildStyledDropdown({
     required String? value,
     required String hint,
     required List<String> items,
@@ -355,30 +312,22 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   }) {
     return DropdownButtonFormField<String>(
       value: value,
-      hint: Text(hint),
-      items: items.map((String item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(item),
-        );
-      }).toList(),
-      onChanged: onChanged,
+      icon: Icon(Icons.arrow_drop_down_circle, color: Colors.blue),
+      dropdownColor: Colors.white,
       decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.blue!),
-        ),
-        filled: true,
-        fillColor: Colors.white,
+        labelText: hint,
+        labelStyle: TextStyle(color: Colors.blue),
+        contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
+      style: TextStyle(fontSize: 16, color: Colors.black),
+      onChanged: onChanged,
+      items: items
+          .map((item) => DropdownMenuItem<String>(
+        value: item,
+        child: Text(item),
+      ))
+          .toList(),
     );
   }
 }
