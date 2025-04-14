@@ -1,75 +1,19 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
-class ViewAppointmentsPage extends StatefulWidget {
-  @override
-  _ViewAppointmentsPageState createState() => _ViewAppointmentsPageState();
-}
+class ViewAppointmentsPage extends StatelessWidget {
+  const ViewAppointmentsPage({Key? key}) : super(key: key);
 
-class _ViewAppointmentsPageState extends State<ViewAppointmentsPage> {
-  bool isLoading = true;
-  List<Map<String, dynamic>> appointments = [];
+  Future<List<Map<String, dynamic>>> fetchAppointments() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return [];
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchAppointments();
-  }
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('appointments')
+        .get();
 
-  Future<void> _fetchAppointments() async {
-    try {
-      QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
-          .collection('appointments')
-          .get();
-
-      if (snapshot.docs.isNotEmpty) {
-        setState(() {
-          appointments = snapshot.docs.map((doc) {
-            return {
-              'id': doc.id,
-              ...doc.data(),
-            };
-          }).toList();
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    } catch (error) {
-      print("Error fetching appointments: $error");
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _deleteAppointment(String id) async {
-    try {
-      await FirebaseFirestore.instance.collection('appointments').doc(id).delete();
-      setState(() {
-        appointments.removeWhere((appointment) => appointment['id'] == id);
-      });
-    } catch (error) {
-      print("Error deleting appointment: $error");
-    }
-  }
-
-  Future<void> _editAppointment(String id, Map<String, dynamic> updatedData) async {
-    try {
-      await FirebaseFirestore.instance.collection('appointments').doc(id).update(updatedData);
-      setState(() {
-        appointments = appointments.map((appointment) {
-          if (appointment['id'] == id) {
-            return {...appointment, ...updatedData};
-          }
-          return appointment;
-        }).toList();
-      });
-    } catch (error) {
-      print("Error updating appointment: $error");
-    }
+    return querySnapshot.docs.map((doc) => doc.data()).toList();
   }
 
   @override
@@ -78,260 +22,146 @@ class _ViewAppointmentsPageState extends State<ViewAppointmentsPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white,size: 18,),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        foregroundColor: Colors.white,
         title: const Text(
-          "Appointments",
+          "View Appointments",
           style: TextStyle(
+            fontSize: 22,
             fontFamily: "GoogleSans",
-            fontSize: 18,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
+        centerTitle: true,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/Images/app.jpg',
-              width: 350,
-              height: 200,
-              fit: BoxFit.cover,
-            ),
-            const SizedBox(height: 10),
-            const Center(
-              child: Text(
-                "All Appointments",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: "GoogleSans",
-                  color: Colors.black,
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: fetchAppointments(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("No appointments found."));
+          }
+
+          final appointments = snapshot.data!;
+
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 16),
+                Image.asset(
+                  'assets/Images/app.jpg',
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.contain,
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Center(
-              child: Text(
-                "You can see all appointments here.",
-                style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
-              ),
-            ),
-            const SizedBox(height: 16),
-            appointments.isEmpty
-                ? const Center(
-              child: Text(
-                "No appointments found",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: "GoogleSans",
+                const SizedBox(height: 16),
+                const Text(
+                  "All Appointments",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "GoogleSans",
+                  ),
                 ),
-              ),
-            )
-                : Expanded(
-              child: ListView.builder(
-                itemCount: appointments.length,
-                itemBuilder: (context, index) {
-                  final appointment = appointments[index];
-                  return Card(
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 10),
-                    color: Colors.blueGrey[50],
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Dr. ${appointment['doctorName'] ?? 'N/A'}",
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: "GoogleSans",
-                                  color: Colors.blueAccent,
-                                ),
-                              ),
-                              Text(
-                                appointment['appointmentTime'] ?? 'N/A',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontFamily: "GoogleSans",
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.person, color: Colors.blue, size: 20),
-                              const SizedBox(width:8),
-                              Text(
-                                "Patient: ${appointment['patientName'] ?? 'N/A'}",
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: "GoogleSans",
-                                ),
-                              ),
-                            ],
-                          ),
+                const SizedBox(height: 8),
+                const Text(
+                  "You can see all appointments here.",
+                  style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
+                ),
+                const SizedBox(height: 16),
 
-                          const SizedBox(height: 4),
+                // Appointments list
+                ListView.builder(
+                  itemCount: appointments.length,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemBuilder: (context, index) {
+                    final appointment = appointments[index];
+                    final patientName = appointment['patientName'] ?? 'N/A';
+                    final doctor = appointment['doctorName'] ?? 'N/A';
 
-                          Row(
-                            children: [
-                              const Icon(Icons.emoji_people, color: Colors.orange, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Age: ${appointment['patientAge'] ?? 'N/A'}",
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: "GoogleSans",
-                                ),
-                              ),
-                            ],
-                          ),
+                    String rawAppointment = appointment['appointmentTime'] ?? 'N/A';
+                    String datePart = 'N/A';
+                    String timePart = 'N/A';
 
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.phone, color: Colors.red, size: 20),
-                              const SizedBox(width: 8,),
-                              Text(
-                                "Phone No: ${appointment['phoneNo'] ?? 'N/A'}",
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: "GoogleSans",
-                                ),
-                              ),
-                            ],
-                          ),
+                    if (rawAppointment.contains(" at ")) {
+                      final parts = rawAppointment.split(" at ");
+                      if (parts.length == 2) {
+                        datePart = parts[0];
+                        timePart = parts[1];
+                      }
+                    }
 
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.edit, color: Colors.blueAccent),
-                                onPressed: () async {
-                                  // Show dialog for editing appointment details
-                                  _showEditDialog(appointment);
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  // Confirm delete
-                                  _showDeleteDialog(appointment['id']);
-                                },
-                              ),
-                            ],
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditDialog(Map<String, dynamic> appointment) {
-    final doctorNameController = TextEditingController(text: appointment['doctorName']);
-    final appointmentTimeController = TextEditingController(text: appointment['appointmentTime']);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Edit Appointment"),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: doctorNameController,
-                  decoration: const InputDecoration(labelText: "Doctor's Name"),
+                      child: ListTile(
+                        contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        title: Text(
+                          "Patient: $patientName",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontFamily: "GoogleSans",
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text(
+                              "Doctor: $doctor",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontFamily: "GoogleSans",
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Date: $datePart",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontFamily: "GoogleSans",
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              "Time: $timePart",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontFamily: "GoogleSans",
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-
-                TextField(
-                  controller: appointmentTimeController,
-                  decoration: const InputDecoration(labelText: "Appointment Time"),
-                ),
-
               ],
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                final updatedData = {
-                  'doctorName': doctorNameController.text,
-                  'appointmentTime': appointmentTimeController.text,
-
-                };
-                _editAppointment(appointment['id'], updatedData);
-                Navigator.pop(context);
-              },
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showDeleteDialog(String id) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Delete Appointment"),
-          content: const Text("Are you sure you want to delete this appointment?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                _deleteAppointment(id);
-                Navigator.pop(context);
-              },
-              child: const Text("Delete", style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:intl/intl.dart';
 
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -21,7 +22,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // Initialize the Gemini API model
     model = GenerativeModel(
       model: 'gemini-2.0-flash',
-      apiKey: 'AIzaSyCvTt4lsVQJPkQqO-90-1FSFoN6OLB2d8k',
+      apiKey: 'APP_KEY',
     );
   }
 

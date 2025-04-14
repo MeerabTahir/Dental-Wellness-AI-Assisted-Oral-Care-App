@@ -41,6 +41,7 @@ dependencies:
   intl: ^0.17.0
   http: ^1.2.1
   camera: ^0.10.5+5
+  flutter_dotenv: ^5.0.2
   google_mlkit_face_detection: ^0.11.0
   flutter_plugin_android_lifecycle: ^2.0.2
 
@@ -53,9 +54,6 @@ dependencies:
     git:
       url: https://github.com/serenader2014/flutter_carousel_slider.git
       ref: master
-
-
-
 
   #  charts_flutter:
 #    git:
@@ -80,7 +78,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

@@ -99,13 +99,11 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         "profileImage": imageUrl,
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Profile saved successfully")),
-      );
+
+        _showCustomSnackBar(context, 'Profile updated successfully!', Colors.green);
+
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error saving data: $e")),
-      );
+       _showCustomSnackBar(context, 'Error updating profile: $e', Colors.red);
     }
   }
 
@@ -252,7 +250,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               SizedBox(height: 10),
               TextField(
                 controller: locationController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: "Location",
                   border: OutlineInputBorder(),
                   contentPadding:
@@ -260,27 +258,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                 ),
               ),
               SizedBox(height: 10),
-              // DropdownButtonFormField<String>(
-              //   value: selectedGender,
-              //   decoration: InputDecoration(
-              //     labelText: "Gender",
-              //     border: OutlineInputBorder(),
-              //     contentPadding:
-              //     EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-              //   ),
-              //   items: ["Male", "Female", "Other"]
-              //       .map((gender) => DropdownMenuItem(
-              //     value: gender,
-              //     child: Text(gender),
-              //   ))
-              //       .toList(),
-              //   onChanged: (value) {
-              //     setState(() {
-              //       selectedGender = value;
-              //     });
-              //   },
-              // ),
-              SizedBox(height: 10),
+
               TextField(
                 controller: descController,
                 decoration: InputDecoration(
@@ -399,4 +377,22 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
       ),
     );
   }
+}
+
+void _showCustomSnackBar(BuildContext context, String message, Color color) {
+  final snackBar = SnackBar(
+    content: Text(
+      message,
+      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    ),
+    backgroundColor: color,
+    behavior: SnackBarBehavior.floating,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    action: SnackBarAction(
+      label: 'Dismiss',
+      textColor: Colors.white,
+      onPressed: () {},
+    ),
+  );
+  ScaffoldMessenger.of(context).showSnackBar(snackBar);
 }

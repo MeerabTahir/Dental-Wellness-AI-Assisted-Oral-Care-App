@@ -21,12 +21,17 @@ class _ScheduleScreenState extends State<ScheduleScreen>
 
   DateTime? parseAppointmentTime(String timeStr) {
     try {
-      return DateFormat("MM-dd 'at' h:mm a").parse(timeStr);
+      // Extract month, day and time from the string
+      final now = DateTime.now();
+      final formatted = '$timeStr ${now.year}'; // "04-23 at 8:15 PM 2025"
+      return DateFormat("MM-dd 'at' h:mm a yyyy").parse(formatted);
     } catch (e) {
       debugPrint('Date parsing error: $e');
       return null;
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

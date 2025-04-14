@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:intl/intl.dart';
 
 import '../login.dart';
 import 'All Appointments/appointmentsPage.dart';
@@ -36,6 +35,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
         if (userDoc.exists) {
           setState(() {
             userName = userDoc.get('userName');
+            imageUrl = userDoc.get('profileImage');
           });
         }
       }
@@ -235,7 +235,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               children: [
                 CircleAvatar(
                   radius: 35,
-                  backgroundImage: imageUrl != null
+                  backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
                       ? NetworkImage(imageUrl!)
                       : const AssetImage('assets/Images/avatar.png') as ImageProvider,
                 ),

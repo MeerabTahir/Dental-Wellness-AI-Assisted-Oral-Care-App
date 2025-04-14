@@ -9,11 +9,13 @@ class ManageUsersPage extends StatefulWidget {
 class _ManageUsersPageState extends State<ManageUsersPage> {
   bool isLoading = true;
   List<Map<String, dynamic>> users = [];
+
   @override
   void initState() {
     super.initState();
     _fetchUsers();
   }
+
   Future<void> _fetchUsers() async {
     try {
       QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
@@ -85,8 +87,54 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
             },
             child: const Text(
               "Delete",
-              style: TextStyle(fontFamily: "GoogleSans", color: Colors.blue),
+              style: TextStyle(fontFamily: "GoogleSans", color: Colors.red),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserItem(Map<String, dynamic> user) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.blue.shade100),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.blue.shade50.withOpacity(0.2),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  user['userName'] ?? "No Name",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "GoogleSans",
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Gender: ${user['gender'] ?? 'N/A'}",
+                  style: const TextStyle(fontFamily: "GoogleSans"),
+                ),
+                Text(
+                  "DOB: ${user['dateOfBirth'] ?? 'N/A'}",
+                  style: const TextStyle(fontFamily: "GoogleSans"),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              _showDeleteDialog(user['docId']);
+            },
           ),
         ],
       ),
@@ -110,86 +158,54 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
           style: TextStyle(fontFamily: "GoogleSans", fontSize: 18, color: Colors.white),
         ),
       ),
-      body: Container(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/Images/patients.png',
-                width: 500,
-                height: 250,
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.asset(
+              'assets/Images/patients.png',
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "All Users",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                fontFamily: "GoogleSans",
+                color: Colors.black87,
               ),
-              const SizedBox(height: 16),
-              const Text(
-                "All Users",
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "You can see all users here",
+              style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
+            ),
+            const SizedBox(height: 16),
+            users.isEmpty
+                ? const Center(
+              child: Text(
+                "No users found",
                 style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: "GoogleSans",
-                  color: Colors.black87,
-                ),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: "GoogleSans"),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                "You can see all users here",
-                style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
+            )
+                : Expanded(
+              child: ListView.builder(
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  return _buildUserItem(users[index]);
+                },
               ),
-              const SizedBox(height: 16),
-              users.isEmpty
-                  ? const Center(
-                child: Text(
-                  "No users found",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: "GoogleSans"),
-                ),
-              )
-                  : Expanded(
-                child: ListView.builder(
-                  itemCount: users.length,
-                  itemBuilder: (context, index) {
-                    final user = users[index];
-                    return Card(
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        leading: CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.blue.shade100,
-                          child: const Icon(Icons.person, color: Colors.blue, size: 30),
-                        ),
-                        title: Text(
-                          user['userName'] ?? "No Name",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: "GoogleSans",
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            _showDeleteDialog(user['docId']);
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

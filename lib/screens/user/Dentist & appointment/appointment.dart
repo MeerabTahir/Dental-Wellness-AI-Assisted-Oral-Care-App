@@ -85,9 +85,12 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     availableDates.clear();
     DateTime today = DateTime.now();
     DateTime endDate = today.add(Duration(days: 30));
+    int currentYear = today.year;
 
     while (today.isBefore(endDate)) {
-      if (today.weekday >= DateTime.monday && today.weekday <= DateTime.friday) {
+      if (today.year == currentYear &&
+          today.weekday >= DateTime.monday &&
+          today.weekday <= DateTime.friday) {
         String formattedDate = DateFormat('EEE d MMM').format(today);
         availableDates.add(formattedDate);
       }
@@ -96,6 +99,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
     setState(() {});
   }
+
 
   void _submitAppointment(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {

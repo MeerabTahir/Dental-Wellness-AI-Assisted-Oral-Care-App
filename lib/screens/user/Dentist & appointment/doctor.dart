@@ -1,15 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../footer.dart';
 import 'package:intl/intl.dart';
 
 class DoctorScreen extends StatefulWidget {
+  const DoctorScreen({super.key});
+
   @override
   _DoctorScreenState createState() => _DoctorScreenState();
 }
 
 class _DoctorScreenState extends State<DoctorScreen> {
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   String _searchText = '';
 
   @override
@@ -23,7 +26,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Dentists',
           style: TextStyle(
             color: Colors.white,
@@ -48,7 +51,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               ),
               onChanged: (value) {
                 setState(() {
@@ -65,13 +68,13 @@ class _DoctorScreenState extends State<DoctorScreen> {
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return Center(child: CircularProgressIndicator(color: Colors.blue));
+                    return const Center(child: CircularProgressIndicator(color: Colors.blue));
                   }
                   if (snapshot.hasError) {
                     return Center(
                       child: Text(
                         'Error: ${snapshot.error}',
-                        style: TextStyle(color: Colors.red, fontSize: 16),
+                        style: const TextStyle(color: Colors.red, fontSize: 16),
                       ),
                     );
                   }
@@ -101,17 +104,16 @@ class _DoctorScreenState extends State<DoctorScreen> {
                       String userName = doctor['userName'] ?? 'Unknown';
                       String speciality = doctor['profession'] ?? 'Not Specified';
                       String location = doctor['location'] ?? 'Location not available';
-                      String formattedAppointmentTime = '';
 
                       var appointmentTime = doctor['appointmentTime'];
                       if (appointmentTime != null) {
                         if (appointmentTime is Timestamp) {
                           DateTime dateTime = appointmentTime.toDate();
-                          formattedAppointmentTime = DateFormat('yyyy-MM-dd – HH:mm').format(dateTime);
                         } else if (appointmentTime is String) {
-                          formattedAppointmentTime = appointmentTime;
                         } else {
-                          print('Unexpected appointmentTime format: $appointmentTime');
+                          if (kDebugMode) {
+                            print('Unexpected appointmentTime format: $appointmentTime');
+                          }
                         }
                       }
 
@@ -141,7 +143,7 @@ class _DoctorScreenState extends State<DoctorScreen> {
                               // Circular Doctor Image
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: imageUrl != null && imageUrl.isNotEmpty
+                                child: imageUrl.isNotEmpty
                                     ? Image.network(
                                   imageUrl,
                                   width: 60,

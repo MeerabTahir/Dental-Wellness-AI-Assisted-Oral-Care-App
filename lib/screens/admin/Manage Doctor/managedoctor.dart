@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:tooth_tales/screens/user/Dentist & appointment/desc.dart';
 
 class ManageDoctorsPage extends StatefulWidget {
   @override
@@ -26,7 +25,11 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
 
       if (snapshot.docs.isNotEmpty) {
         setState(() {
-          doctors = snapshot.docs.map((doc) => doc.data()).toList();
+          doctors = snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['docId'] = doc.id;
+            return data;
+          }).toList();
           isLoading = false; // Set loading to false once data is fetched
         });
       } else {
@@ -62,7 +65,7 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
               try {
                 await FirebaseFirestore.instance.collection('users').doc(docId).delete();
                 setState(() {
-                  doctors.removeWhere((doctor) => doctor['id'] == docId);
+                  doctors.removeWhere((doctor) => doctor['docId'] == docId);
                 });
                 Navigator.of(context).pop();
               } catch (e) {
@@ -76,6 +79,80 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
     );
   }
 
+  Widget _buildDoctorItem(Map<String, dynamic> doctor) {
+    String? imageUrl = doctor['profileImage']; // Image URL from Firestore
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.blue.shade50.withOpacity(0.2),
+        border: Border.all(color: Colors.blue.shade100),
+      ),
+      child: Row(
+        children: [
+          // Profile Image
+          CircleAvatar(
+            radius: 35,
+            backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                ? NetworkImage(imageUrl)
+                : const AssetImage('assets/Images/avatar.png') as ImageProvider,
+            child: imageUrl == null || imageUrl.isEmpty
+                ? const Icon(Icons.camera_alt, size: 40, color: Colors.white)
+                : null,
+          ),
+          const SizedBox(width: 16),
+          // Doctor Information
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Dr. ${doctor['userName'] ?? 'No Name'}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "GoogleSans",
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${doctor['specialization'] ?? 'N/A'}",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "GoogleSans",
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${doctor['profession'] ?? 'No Profession'}",
+                  style: const TextStyle(fontSize: 14, fontFamily: "GoogleSans"),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${doctor['location'] ?? 'No Location Provided'}",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                    fontFamily: "GoogleSans",
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Delete Icon
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              _showDeleteDialog(doctor['docId']);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,7 +160,7 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
       appBar: AppBar(
         backgroundColor: Colors.blue,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white,size: 18,),
+          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 18),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -93,109 +170,57 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
           style: TextStyle(fontFamily: "GoogleSans", fontSize: 16, color: Colors.white),
         ),
       ),
-      body: Container(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: isLoading
-              ? const Center(child: CircularProgressIndicator()) // Show loading spinner
-              : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.asset(
-                'assets/Images/dentals.png',
-                width: 500,
-                height: 250,
-              ),
-              const SizedBox(height: 10),
-              Center(
-                child: const Text(
-                  "All Dentists",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: "GoogleSans",
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.asset(
+              'assets/Images/dentals.png',
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: const Text(
+                "All Dentists",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: "GoogleSans",
                 ),
               ),
-              const SizedBox(height: 8),
-              Center(
-                child: const Text(
-                  "You can see all dentists here.",
-                  style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
-                ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: const Text(
+                "You can see all dentists here.",
+                style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
               ),
-              const SizedBox(height: 16),
-
-              // Table (List of Dentists)
-              doctors.isEmpty
-                  ? const Center(
-                child: Text(
-                  "No dentists found",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: "GoogleSans"),
-                ),
-              )
-                  : Expanded(
-                child: ListView.builder(
-                  itemCount: doctors.length,
-                  itemBuilder: (context, index) {
-                    final doctor = doctors[index];
-                    return Card(
-                      elevation: 8, // Adding a slight shadow for visual appeal
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15), // Rounded corners
-                      ),
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        leading: CircleAvatar(
-                          radius: 30,
-                          backgroundColor: Colors.blue.shade100,
-                          child: const Icon(Icons.person, color: Colors.blue, size: 30),
-                        ),
-                        title: Text(
-                          "Dr. ${doctor['userName'] ?? 'No Name'}",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: "GoogleSans",
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "${doctor['profession'] ?? 'N/A'}", // Specialty
-                              style: const TextStyle(
-                                  fontSize: 14,
-                                  fontFamily: "GoogleSans",
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4), // Spacer between specialty and location
-                            Text(
-                              "${doctor['location'] ?? 'No Location Provided'}", // Location
-                              style: const TextStyle(
-                                  fontSize: 14,
-                                  fontFamily: "GoogleSans",
-                                  color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            _showDeleteDialog(doctor['id']); // Show delete dialog
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
+            ),
+            const SizedBox(height: 16),
+            doctors.isEmpty
+                ? const Center(
+              child: Text(
+                "No dentists found",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: "GoogleSans"),
               ),
-            ],
-          ),
+            )
+                : Expanded(
+              child: ListView.builder(
+                itemCount: doctors.length,
+                itemBuilder: (context, index) {
+                  return _buildDoctorItem(doctors[index]);
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

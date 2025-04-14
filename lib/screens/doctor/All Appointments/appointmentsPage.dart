@@ -23,12 +23,15 @@ class _AppointmentsPageState extends State<AppointmentsPage>
 
   DateTime? parseAppointmentTime(String timeStr) {
     try {
-      return DateFormat("MM-dd 'at' h:mm a").parse(timeStr);
+      final now = DateTime.now();
+      final formatted = '$timeStr ${now.year}';
+      return DateFormat("MM-dd 'at' h:mm a yyyy").parse(formatted);
     } catch (e) {
       debugPrint('Date parsing error: $e');
       return null;
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tooth_tales/screens/user/homepage.dart';
 import 'ChatsAndTips/chat.dart';
 import 'login.dart';
-import 'ChatsAndTips/chat.dart';
 import 'user/Profile/patientProfile.dart';
 
 class FooterScreen extends StatelessWidget {
@@ -12,12 +10,12 @@ class FooterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.blue,
-      padding: EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(12.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.home,
               color: Colors.white,
             ),
