@@ -124,7 +124,7 @@ class _DentistQueryState extends State<DentistQuery> {
             child: Column(
               children: [
                 Image.asset(
-                  'assets/images/query.jpg', // Add your image in pubspec.yaml
+                  'assets/Images/query.jpg', // Add your image in pubspec.yaml
                   height: 200,
                   width: double.infinity,
                 ),

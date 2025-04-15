@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:timeago/timeago.dart' as timeago;
 
 class UserQuery extends StatefulWidget {
@@ -166,7 +166,7 @@ class _UserQueryState extends State<UserQuery> {
     return Column(
       children: [
         SizedBox(height: 10),
-        Image.asset("assets/images/query.jpg", height: 200,
+        Image.asset("assets/Images/query.jpg", height: 200,
           width: double.infinity,),
         Text(
           "All Queries",
