@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "94725667875",
+    "project_id": "tooth-tales",
+    "storage_bucket": "tooth-tales.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:94725667875:android:cb3acf569488c8401ec596",
+        "android_client_info": {
+          "package_name": "com.example.tooth_tales"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfwbX0BpGrCXB8o9WSVaPSS9kF5R482Ec"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,2 @@
+C:/Users/Tesla laptop/Dental_Wellness-main/android/app/.cxx/RelWithDebInfo/4t6n4a6m/x86/CMakeFiles/edit_cache.dir
+C:/Users/Tesla laptop/Dental_Wellness-main/android/app/.cxx/RelWithDebInfo/4t6n4a6m/x86/CMakeFiles/rebuild_cache.dir
