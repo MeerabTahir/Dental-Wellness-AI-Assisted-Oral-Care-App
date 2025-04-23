@@ -146,7 +146,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 hintText: 'YYYY-MM-DD',
                 border: OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.datetime,
+              keyboardType: TextInputType.number,
             ),
             SizedBox(height: 16),
             DropdownButtonFormField<String>(
