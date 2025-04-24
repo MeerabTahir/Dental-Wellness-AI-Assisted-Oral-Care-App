@@ -21,7 +21,11 @@ dependencies:
   http: ^1.2.1
   camera: ^0.10.5+5
   font_awesome_flutter: ^10.8.0
-#  flutter_dotenv: ^3.1.0
+#  google_mlkit_face_detection: ^0.13.0
+#  path_provider: ^2.1.1
+
+
+  #  flutter_dotenv: ^3.1.0
 
   carousel_slider: ^5.0.0
   cupertino_icons: ^1.0.6
