@@ -37,6 +37,7 @@ dependencies:
   tflite_flutter: ^0.11.0
   path_provider: ^2.1.4
   image: ^3.3.0
+  image_cropper: ^8.0.1
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +53,8 @@ flutter:
   assets:
     - assets/Images/
     - assets/model/oralcancer_model.tflite
+    - assets/model/mobilenet_model.tflite
+    - assets/model/disease_model.tflite
 
   fonts:
     - family: Poppins

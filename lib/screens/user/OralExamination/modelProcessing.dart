@@ -15,8 +15,8 @@ class ModelProcessingScreen extends StatefulWidget {
 
 class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
   Uint8List? _imageBytes;
-  String _result = '';
-  late Interpreter _interpreter;
+  String result = '';
+  late Interpreter _Interpreter;
 
   @override
   void initState() {
@@ -26,30 +26,28 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
 
   @override
   void dispose() {
-    _interpreter.close();
+    _Interpreter.close();
     super.dispose();
   }
 
   Future<void> _loadModelAndImage() async {
     try {
-      print("Loading model...");
-      _interpreter = await Interpreter.fromAsset('assets/model/oralcancer_model.tflite');
-      print('Model loaded');
+      print("Loading ResNet model...");
+      _Interpreter = await Interpreter.fromAsset('assets/model/disease_model.tflite');
+      print("Model loaded.");
 
-      print("Downloading image from Firebase...");
+      print("Downloading image...");
       final response = await http.get(Uri.parse(widget.imageUrl));
-      print("Status: ${response.statusCode}");
-
       if (response.statusCode == 200) {
         _imageBytes = response.bodyBytes;
-        setState(() => _result = 'Processing...');
-        await _runModel(response.bodyBytes);
+        setState(() => result = 'Processing...');
+        await _runModel(_imageBytes!);
       } else {
-        setState(() => _result = 'Failed to load image');
+        setState(() => result = 'Failed to load image.');
       }
     } catch (e) {
-      print('Error loading model/image: $e');
-      setState(() => _result = 'Error loading model or image');
+      print('Error: $e');
+      setState(() => result = 'Error loading model or image.');
     }
   }
 
@@ -57,38 +55,62 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
     try {
       img.Image? image = img.decodeImage(imageBytes);
       if (image == null) {
-        setState(() => _result = 'Invalid image');
+        result = 'Invalid image.';
         return;
       }
 
       final resizedImage = img.copyResize(image, width: 224, height: 224);
-      final input = List.generate(224, (y) => List.generate(224, (x) {
-        final pixel = resizedImage.getPixel(x, y);
-        return [
-          img.getRed(pixel).toDouble(),
-          img.getGreen(pixel).toDouble(),
-          img.getBlue(pixel).toDouble()
-        ];
-      }));
+      final input = List.generate(224, (y) =>
+          List.generate(224, (x) {
+            final pixel = resizedImage.getPixel(x, y);
+            return [
+              img.getRed(pixel).toDouble() / 255.0,
+              img.getGreen(pixel).toDouble() / 255.0,
+              img.getBlue(pixel).toDouble() / 255.0,
+            ];
+          }));
 
-      // Reshape to [1, 224, 224, 3]
-      var inputTensor = [input];
+      var inputTensor = [input]; // [1, 224, 224, 3]
+      var output = List.filled(1 * 5, 0.0).reshape([1, 5]);
 
-      // Output should be shape [1, 1]
-      var output = List.filled(1 * 1, 0.0).reshape([1, 1]);
+      _Interpreter.run(inputTensor, output);
 
-      _interpreter.run(inputTensor, output);
+      List<double> probabilities = output[0];
+      List<String> classLabels = [
+        'Gingivitis',
+        'Mouth Ulcer',
+        'Dental Cavity',
+        'Healthy',
+        'Cancer'
+      ];
 
-      double confidence = output[0][0];
-      double cancerProbability = 1.0 - confidence;
-      String label = confidence > 0.5 ? 'No Cancer Detected' : 'Cancer Detected';
+      int maxIndex = probabilities.indexWhere((p) =>
+      p == probabilities.reduce((a, b) => a > b ? a : b));
+      double maxConfidence = probabilities[maxIndex];
+
+      StringBuffer resultBuffer = StringBuffer();
+      if (maxConfidence > 0.5 && classLabels[maxIndex] != 'Healthy') {
+        resultBuffer.writeln(
+            'Oral Diagnosis:\nDetected: ${classLabels[maxIndex]}');
+      } else {
+        resultBuffer.writeln('Oral Diagnosis:\nNo dental issue detected');
+      }
+
+      // Show full probability breakdown
+      resultBuffer.writeln('\nConfidence Scores:');
+      for (int i = 0; i < classLabels.length; i++) {
+        resultBuffer.writeln(
+            '${classLabels[i]}: ${(probabilities[i] * 100).toStringAsFixed(2)}%');
+      }
 
       setState(() {
-        _result = '${label}\nProbability of Cancer: ${(cancerProbability * 100).toStringAsFixed(2)}%\nProbability of Non-Cancer: ${(confidence * 100).toStringAsFixed(2)}%';
+        result = resultBuffer.toString();
       });
     } catch (e) {
       print('Error running model: $e');
-      setState(() => _result = 'Error during model inference');
+      setState(() {
+        result = 'Error during inference.';
+      });
     }
   }
 
@@ -97,20 +119,26 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Model Result'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.teal,
       ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: _imageBytes == null
               ? CircularProgressIndicator()
-              : Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.memory(_imageBytes!, width: 250),
-              SizedBox(height: 20),
-              Text(_result, style: TextStyle(fontSize: 18), textAlign: TextAlign.center),
-            ],
+              : SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.memory(_imageBytes!, width: 250),
+                SizedBox(height: 20),
+                Text(
+                  result,
+                  style: TextStyle(fontSize: 16, height: 1.5),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
