@@ -89,7 +89,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
@@ -103,83 +102,101 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true, // <-- important
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Profile Page', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundImage: _imageFile != null
-                      ? FileImage(_imageFile!)
-                      : _imageUrl != null
-                      ? NetworkImage(_imageUrl!)
-                      : AssetImage('assets/Images/avatar.png') as ImageProvider,
-                  child: _imageFile == null && _imageUrl == null
-                      ? Icon(Icons.camera_alt, size: 40, color: Colors.white.withOpacity(0.7))
-                      : null,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(16.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: CircleAvatar(
+                            radius: 60,
+                            backgroundImage: _imageFile != null
+                                ? FileImage(_imageFile!)
+                                : _imageUrl != null
+                                ? NetworkImage(_imageUrl!)
+                                : AssetImage('assets/Images/avatar.png')
+                            as ImageProvider,
+                            child: _imageFile == null && _imageUrl == null
+                                ? Icon(Icons.camera_alt,
+                                size: 40,
+                                color: Colors.white.withOpacity(0.7))
+                                : null,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: _userNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: _dobController,
+                        decoration: InputDecoration(
+                          labelText: 'Date of Birth',
+                          hintText: 'YYYY-MM-DD',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.datetime,
+                      ),
+                      SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _gender,
+                        items: ['Male', 'Female', 'Other']
+                            .map((label) => DropdownMenuItem(
+                          child: Text(label),
+                          value: label,
+                        ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _gender = value!;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Gender',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _updateProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 20.0, vertical: 20.0),
+                            textStyle: TextStyle(fontSize: 18),
+                          ),
+                          child: Text('Update Profile',
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                      SizedBox(height: 16), // a little extra space at bottom
+                    ],
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _userNameController,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              controller: _dobController,
-              decoration: InputDecoration(
-                labelText: 'Date of Birth',
-                hintText: 'YYYY-MM-DD',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _gender,
-              items: ['Male', 'Female', 'Other']
-                  .map((label) => DropdownMenuItem(
-                child: Text(label),
-                value: label,
-              ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _gender = value!;
-                });
-              },
-              decoration: InputDecoration(
-                labelText: 'Gender',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 24),
-            Center(
-              child: ElevatedButton(
-                onPressed: _updateProfile,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-                  textStyle: TextStyle(fontSize: 18),
-                ),
-                child: Text('Update Profile', style: TextStyle(color: Colors.white)),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

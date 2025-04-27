@@ -180,16 +180,25 @@ class _HomePageState extends State<HomePage> {
                       text: "You are Looking for your Desired Dentist?",
                       color: Colors.orangeAccent.shade400,
                       imagePath: "assets/Images/doctor1.png",
+                      imageHeight:double.infinity,
+                      imageWidth: double.infinity,
+                      boxFit: BoxFit.fitHeight,
                     ),
                     buildSimpleCarouselCard(
                       text: "Detect Oral Diseases Early – Visit Us Today!",
-                      color: Colors.red.shade400,
-                      imagePath: "assets/Images/mouth.png",
+                      color: Colors.blue.shade400,
+                      imagePath: "assets/Images/diseases.png",
+                      imageHeight: double.infinity,
+                      imageWidth: double.infinity,
+                      boxFit: BoxFit.fitHeight,
                     ),
                     buildSimpleCarouselCard(
                       text: "Book Appointments Easily & On Time",
                       color: Colors.teal.shade400,
-                      imagePath: "assets/Images/newappoint.png",
+                      imagePath: "assets/Images/Picture1.png",
+                      imageHeight: double.infinity,
+                      imageWidth: 500,
+                      boxFit: BoxFit.fitWidth,
                     ),
                   ],
                 ),
@@ -217,7 +226,7 @@ class _HomePageState extends State<HomePage> {
                               "My \nAppointments", '/schedule', Colors.pinkAccent),
                           SizedBox(width: 12),
                           buildFeatureTile(context, Icons.health_and_safety,
-                              "Oral \nExamination", '/oralexamination', Colors.orange),
+                              "Oral \nExamination", '/patient', Colors.orange),
                           SizedBox(width: 12),
                           buildFeatureTile(context, Icons.chat,
                               "Ask \nQuestions", '/questions', Colors.deepPurple),
@@ -250,15 +259,30 @@ class _HomePageState extends State<HomePage> {
                       stream: FirebaseFirestore.instance
                           .collection('users')
                           .where('isDoctor', isEqualTo: true)
-                          .limit(4) // Show just a few for preview
+                          .limit(4)
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
+                          return Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                            ),
+                          );
                         }
 
                         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return Text("No dentists available.");
+                          return Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Text(
+                              "No dentists available at the moment.",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                                fontFamily: 'GoogleSans',
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
                         }
 
                         var doctorDocs = snapshot.data!.docs;
@@ -269,63 +293,131 @@ class _HomePageState extends State<HomePage> {
                           padding: EdgeInsets.zero,
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 0.85,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            childAspectRatio: 0.75,
                           ),
                           itemCount: doctorDocs.length,
                           itemBuilder: (context, index) {
                             var doc = doctorDocs[index];
                             String name = doc['userName'] ?? 'Unknown';
                             String specialization = doc['specialization'] ?? 'Dentist';
-                            String location= doc['location'] ?? 'Location Not specified';
+                            String location = doc['location'] ?? 'Location not specified';
                             String imageUrl = doc['profileImage'] ?? 'https://via.placeholder.com/150';
 
                             return GestureDetector(
                               onTap: () {
-                                Navigator.pushNamed(context, '/desc', arguments: {'doctorId': doc[index].id,});
+                                Navigator.pushNamed(context, '/desc', arguments: {'doctorId': doc.id});
                               },
-                              child: Card(
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    CircleAvatar(
-                                      radius: 35,
-                                      backgroundImage: NetworkImage(imageUrl),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Text(
-                                      name,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        fontFamily: 'GoogleSans',
+                                    // Profile Image
+                                    Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Center(
+                                        child: CircleAvatar(
+                                          radius: 50,
+                                          backgroundImage: NetworkImage(imageUrl),
+                                          child: imageUrl.isEmpty
+                                              ? Icon(Icons.person, size: 40, color: Colors.grey[400])
+                                              : null,
+                                        ),
                                       ),
-                                      textAlign: TextAlign.center,
                                     ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      specialization,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[700],
-                                        fontFamily: 'GoogleSans',
+
+                                    // Content area with fixed constraints
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 12),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          // Name
+                                          Center(
+                                            child: Text(
+                                              name,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                fontFamily: 'GoogleSans',
+                                                color: Colors.blue[900],
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4),
+
+                                          // Specialization
+                                          Center(
+                                            child: Text(
+                                              specialization,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontFamily: 'GoogleSans',
+                                                color: Colors.blue[700],
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4),
+
+                                          // Location
+                                          Row(
+                                            children: [
+                                              Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                                              SizedBox(width: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  location,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontFamily: 'GoogleSans',
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(height: 8),
+
+                                          // Button
+                                          Container(
+                                            width: double.infinity,
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue[50],
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            padding: EdgeInsets.symmetric(vertical: 6),
+                                            child: Center(
+                                              child: Text(
+                                                'View Profile',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  fontFamily: 'GoogleSans',
+                                                  color: Colors.blue[800],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      location,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[700],
-                                        fontFamily: 'GoogleSans',
-                                      ),
-                                      textAlign: TextAlign.center,
                                     ),
                                   ],
                                 ),
@@ -335,6 +427,35 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
+
+
+                    SizedBox(height: 30),
+                    Text(
+                      'Frequently Asked Questions',
+                      style: TextStyle(
+                        fontFamily: 'GoogleSans',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    FAQTile(
+                      question: 'How can I book an appointment?',
+                      answer: 'Go to Book Appointment section, select your dentist and choose a suitable time slot.',
+                    ),
+                    FAQTile(
+                      question: 'Can I consult online?',
+                      answer: 'Yes! Some dentists offer online consultations. Check the profile details before booking.',
+                    ),
+                    FAQTile(
+                      question: 'How do I detect oral diseases early?',
+                      answer: 'Regular checkups and early screenings are the best ways to detect oral issues early.',
+                    ),
+                    FAQTile(
+                      question: 'Is my information secure?',
+                      answer: 'Absolutely! We prioritize user privacy and data security at all times.',
+                    ),
+                    SizedBox(height: 20),
 
                   ],
                 ),
@@ -351,6 +472,9 @@ class _HomePageState extends State<HomePage> {
     required String text,
     required Color color,
     required String imagePath,
+    double imageHeight = 80,
+    double imageWidth = 80,
+    BoxFit boxFit = BoxFit.contain,
   }) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 6),
@@ -384,12 +508,12 @@ class _HomePageState extends State<HomePage> {
                 topRight: Radius.circular(20),
               ),
               child: Align(
-                alignment: Alignment.bottomCenter,
+                alignment: Alignment.center, // changed to center
                 child: Image.asset(
                   imagePath,
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.fitHeight,
+                  width: imageWidth,   // <-- custom width
+                  height: imageHeight, // <-- custom height
+                  fit: boxFit, // contain to avoid stretching
                 ),
               ),
             ),
@@ -399,51 +523,129 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   Widget buildFeatureTile(BuildContext context, IconData icon, String title,
       String route, Color iconColor) {
     return InkWell(
       onTap: () => Navigator.pushNamed(context, route),
+      borderRadius: BorderRadius.circular(16),
+      splashColor: iconColor.withOpacity(0.2),
+      highlightColor: iconColor.withOpacity(0.1),
       child: Container(
-        width: 110,
-        height: 110,
+        width: 120,
+        height: 120,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: EdgeInsets.all(12),
+              padding: EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: iconColor,
                 shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    iconColor,
+                    Color.lerp(iconColor, Colors.black, 0.1)!,
+                  ],
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: iconColor.withOpacity(0.5),
+                    color: iconColor.withOpacity(0.4),
                     spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
                   ),
                 ],
               ),
               child: Icon(
                 icon,
-                size: 30,
+                size: 28,
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: 10),
-            Text(
-              title,
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: "GoogleSans",
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
+        ),
+      ),
+    );
+  }
+  Widget FAQTile({required String question, required String answer}) {
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      elevation: 0,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: ExpansionTile(
+          title: Text(
+            question,
+            style: TextStyle(
+              fontFamily: 'GoogleSans',
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: Colors.grey[800],
+            ),
+          ),
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(8),
+                  bottomRight: Radius.circular(8),
+                ),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Text(
+                answer,
+                style: TextStyle(
+                  fontFamily: 'GoogleSans',
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+          iconColor: Colors.grey[600],
+          collapsedIconColor: Colors.grey[600],
+          tilePadding: EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: EdgeInsets.zero,
         ),
       ),
     );

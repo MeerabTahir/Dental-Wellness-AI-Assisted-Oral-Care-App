@@ -8,6 +8,7 @@ import 'package:tooth_tales/screens/doctor/Query/dentistQuery.dart';
 import 'package:tooth_tales/screens/admin/Manage%20Doctor/doctorregisterpage.dart';
 import 'package:tooth_tales/screens/admin/Manage%20User/manageusers.dart';
 import 'package:tooth_tales/screens/admin/Manage%20Doctor/managedoctor.dart';
+import 'package:tooth_tales/screens/user/OralExamination/patientinfoscreen.dart';
 import 'package:tooth_tales/screens/user/Profile/patientProfile.dart';
 import 'package:tooth_tales/screens/admin/Manage%20Appointment/ViewAppointments.dart';
 import 'package:tooth_tales/screens/user/Dentist & appointment/schedule.dart';
@@ -32,7 +33,8 @@ Map<String, WidgetBuilder> appRoutes = {
   '/manageusers': (context) => ManageUsersPage(),
   '/managedoctor': (context) => ManageDoctorsPage(),
   '/viewappointments': (context) => ViewAppointmentsPage(),
-  '/oralexamination' : (context) => OralExaminationScreen(),
+  '/patient': (context) => PatientInfoScreen(),
+  '/oralexamination' : (context) => OralExaminationScreen(patientInfo:{}),
   '/questions': (context) {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {

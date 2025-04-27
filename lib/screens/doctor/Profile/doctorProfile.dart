@@ -15,6 +15,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
   final TextEditingController specializationController = TextEditingController();
   final TextEditingController professionController = TextEditingController();
   final TextEditingController experienceController = TextEditingController();
+  final TextEditingController feesController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController descController = TextEditingController();
 
@@ -56,6 +57,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         nameController.text = userData['userName'] ?? '';
         specializationController.text = userData['specialization'] ?? '';
         professionController.text = userData['profession'] ?? '';
+        feesController.text = userData['fees'] ?? '';
         experienceController.text = userData['experience'] ?? '';
         locationController.text = userData['location'] ?? '';
         selectedGender = userData['gender'] ?? '';
@@ -91,6 +93,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         "userName": nameController.text,
         "specialization": specializationController.text,
         "profession": professionController.text,
+        "fees": feesController.text,
         "experience": experienceController.text,
         "location": locationController.text,
         "gender": selectedGender,
@@ -238,6 +241,16 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
                 ),
               ),
               SizedBox(height: 10),
+              TextField(
+                controller: feesController,
+                decoration: InputDecoration(
+                  labelText: "Fees",
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                  EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                ),
+              ),
+              SizedBox(height:10),
               TextField(
                 controller: experienceController,
                 decoration: InputDecoration(

@@ -1,0 +1,2 @@
+C:/Users/Tesla laptop/Dental-Wellness-AI-Assisted-Oral-Care-App/android/app/.cxx/RelWithDebInfo/473w3ww5/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/Tesla laptop/Dental-Wellness-AI-Assisted-Oral-Care-App/android/app/.cxx/RelWithDebInfo/473w3ww5/arm64-v8a/CMakeFiles/rebuild_cache.dir

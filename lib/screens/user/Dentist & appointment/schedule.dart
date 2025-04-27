@@ -163,8 +163,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
           margin: const EdgeInsets.symmetric(vertical: 10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           color: Colors.white,
-          elevation: 5,
-          shadowColor: Colors.blue.withOpacity(0.9),
+          elevation: 1,
+          // shadowColor: Colors.blue.withOpacity(0.9),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -195,7 +195,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     const SizedBox(width: 8),
                     Text(
                       'Date: $dateStr',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,fontFamily: "GoogleSans",),
                     ),
                   ],
                 ),
@@ -206,7 +206,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     const SizedBox(width: 8),
                     Text(
                       'Time: $timeStr',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,fontFamily: "GoogleSans",),
                     ),
                   ],
                 ),
@@ -217,7 +217,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     const SizedBox(width: 8),
                     Text(
                       'Age: ${appointment['patientAge']}',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,fontFamily: "GoogleSans",),
                     ),
                   ],
                 ),
@@ -229,7 +229,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     Expanded(
                       child: Text(
                         'Phone No: ${appointment['phoneNo']}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,fontFamily: "GoogleSans",),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
                       ),

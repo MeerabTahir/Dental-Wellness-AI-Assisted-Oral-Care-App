@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'dentalreport.dart';
 
 class ModelProcessingScreen extends StatefulWidget {
+  final Map<String, String> patientInfo;
   final String imageUrl;
 
-  ModelProcessingScreen({required this.imageUrl});
+  const ModelProcessingScreen({required this.imageUrl, required this.patientInfo});
 
   @override
   _ModelProcessingScreenState createState() => _ModelProcessingScreenState();
@@ -16,7 +18,17 @@ class ModelProcessingScreen extends StatefulWidget {
 class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
   Uint8List? _imageBytes;
   String result = '';
-  late Interpreter _Interpreter;
+  late Interpreter _interpreter;
+  String? _detectedDisease;
+  double? _confidenceScore;
+
+  final Map<String, String> diseaseDescriptions = {
+    'Gingivitis': 'Gingivitis is inflammation of the gums, usually caused by plaque buildup and poor oral hygiene.',
+    'Mouth Ulcer': 'Mouth ulcers are small, painful sores inside the mouth caused by irritation, stress, or certain infections.',
+    'Dental Cavity': 'Dental cavities are permanently damaged areas in teeth caused by decay, often due to poor brushing habits.',
+    'Cancer': 'Oral cancer refers to uncontrollable growth of cells in the mouth area that can be life-threatening if not treated early.',
+    'Healthy': 'No dental issues detected. Your oral health looks good!',
+  };
 
   @override
   void initState() {
@@ -26,17 +38,13 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
 
   @override
   void dispose() {
-    _Interpreter.close();
+    _interpreter.close();
     super.dispose();
   }
 
   Future<void> _loadModelAndImage() async {
     try {
-      print("Loading ResNet model...");
-      _Interpreter = await Interpreter.fromAsset('assets/model/disease_model.tflite');
-      print("Model loaded.");
-
-      print("Downloading image...");
+      _interpreter = await Interpreter.fromAsset('assets/model/disease_model.tflite');
       final response = await http.get(Uri.parse(widget.imageUrl));
       if (response.statusCode == 200) {
         _imageBytes = response.bodyBytes;
@@ -46,8 +54,7 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
         setState(() => result = 'Failed to load image.');
       }
     } catch (e) {
-      print('Error: $e');
-      setState(() => result = 'Error loading model or image.');
+      setState(() => result = 'Error loading model or image: $e');
     }
   }
 
@@ -55,7 +62,7 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
     try {
       img.Image? image = img.decodeImage(imageBytes);
       if (image == null) {
-        result = 'Invalid image.';
+        setState(() => result = 'Invalid image.');
         return;
       }
 
@@ -64,16 +71,16 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
           List.generate(224, (x) {
             final pixel = resizedImage.getPixel(x, y);
             return [
-              img.getRed(pixel).toDouble() / 255.0,
-              img.getGreen(pixel).toDouble() / 255.0,
-              img.getBlue(pixel).toDouble() / 255.0,
+              pixel.r.toDouble() / 255.0,
+              pixel.g.toDouble() / 255.0,
+              pixel.b.toDouble() / 255.0,
             ];
           }));
 
-      var inputTensor = [input]; // [1, 224, 224, 3]
+      var inputTensor = [input];
       var output = List.filled(1 * 5, 0.0).reshape([1, 5]);
 
-      _Interpreter.run(inputTensor, output);
+      _interpreter.run(inputTensor, output);
 
       List<double> probabilities = output[0];
       List<String> classLabels = [
@@ -90,26 +97,26 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
 
       StringBuffer resultBuffer = StringBuffer();
       if (maxConfidence > 0.5 && classLabels[maxIndex] != 'Healthy') {
-        resultBuffer.writeln(
-            'Oral Diagnosis:\nDetected: ${classLabels[maxIndex]}');
+        resultBuffer.writeln('${classLabels[maxIndex]}');
+        _detectedDisease = classLabels[maxIndex];
+        _confidenceScore = maxConfidence;
       } else {
-        resultBuffer.writeln('Oral Diagnosis:\nNo dental issue detected');
+        resultBuffer.writeln('No dental issue detected');
+        _detectedDisease = 'Healthy';
+        _confidenceScore = maxConfidence;
       }
 
-      // Show full probability breakdown
       resultBuffer.writeln('\nConfidence Scores:');
       for (int i = 0; i < classLabels.length; i++) {
-        resultBuffer.writeln(
-            '${classLabels[i]}: ${(probabilities[i] * 100).toStringAsFixed(2)}%');
+        resultBuffer.writeln('${classLabels[i]}: ${(probabilities[i] * 100).toStringAsFixed(2)}%');
       }
 
       setState(() {
         result = resultBuffer.toString();
       });
     } catch (e) {
-      print('Error running model: $e');
       setState(() {
-        result = 'Error during inference.';
+        result = 'Error during inference: $e';
       });
     }
   }
@@ -117,29 +124,153 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Model Result'),
-        backgroundColor: Colors.teal,
+        title: Text('Oral Scan Results', style: TextStyle(fontSize: 18)),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        centerTitle: false,
       ),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: _imageBytes == null
-              ? CircularProgressIndicator()
-              : SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.memory(_imageBytes!, width: 250),
-                SizedBox(height: 20),
-                Text(
-                  result,
-                  style: TextStyle(fontSize: 16, height: 1.5),
-                  textAlign: TextAlign.center,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_imageBytes == null)
+                Column(
+                  children: [
+                    CircularProgressIndicator(color: Colors.blue, strokeWidth: 4),
+                    SizedBox(height: 20),
+                    Text(
+                      'Loading image & model...',
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                )
+              else ...[
+                Container(
+                  width: 180,
+                  height: 180,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.2), blurRadius: 8)],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.memory(
+                      _imageBytes!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
+                SizedBox(height: 24),
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.85,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Diagnosis Result',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                          fontFamily: 'GoogleSans',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16),
+                      Divider(color: Colors.blue.shade300, thickness: 1),
+                      SizedBox(height: 16),
+                      Text(
+                        "Detected",
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.blue,
+                          fontFamily: 'GoogleSans',
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        _detectedDisease ?? '',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.blueGrey.shade800,
+                          fontFamily: 'GoogleSans',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8),
+                      if (_confidenceScore != null)
+                        Text(
+                          "Confidence: ${(_confidenceScore! * 100).toStringAsFixed(2)}%",
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.blueGrey,
+                            fontFamily: 'GoogleSans',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      SizedBox(height: 12),
+                      Text(
+                        diseaseDescriptions[_detectedDisease ?? 'Healthy'] ?? '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                          fontFamily: 'GoogleSans',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16),
+                      Icon(Icons.medical_services, color: Colors.blue.shade300, size: 36),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                if (_detectedDisease != null && _confidenceScore != null && _imageBytes != null)
+                  ElevatedButton(
+                    onPressed: (_detectedDisease != 'Healthy') ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DentalReport(
+                            detectedDisease: _detectedDisease!,
+                            confidenceScore: _confidenceScore!,
+                            imageBytes: _imageBytes!,
+                            patientInfo: widget.patientInfo, patientId: '',  // Pass patient info here
+                          ),
+                        ),
+                      );
+                    } : null, // Disable button if Healthy
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: (_detectedDisease != 'Healthy') ? Colors.blue : Colors.grey,
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 4,
+                    ),
+                    child: Text(
+                      'Generate Detailed Report',
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+
               ],
-            ),
+            ],
           ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        height: 20,
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
         ),
       ),
     );

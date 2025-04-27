@@ -8,6 +8,10 @@ import './modelProcessing.dart';
 import 'package:image_cropper/image_cropper.dart';
 
 class OralExaminationScreen extends StatefulWidget {
+  final Map<String, String> patientInfo; // Receive the data
+
+  OralExaminationScreen({required this.patientInfo});
+
   @override
   _OralExaminationScreenState createState() => _OralExaminationScreenState();
 }
@@ -26,8 +30,6 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
   Future<void> _uploadImage() async {
     String? userId = getCurrentUserId();
 
-    print('Uploading image. User ID: $userId, Image file: $_imageFile');
-
     if (_imageFile != null && userId != null) {
       setState(() {
         _isUploading = true;
@@ -36,21 +38,16 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
       try {
         String fileName = 'oral_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
         Reference ref = FirebaseStorage.instance.ref().child(fileName);
-        print('Uploading to Firebase storage with filename: $fileName');
 
         UploadTask uploadTask = ref.putFile(_imageFile!);
         TaskSnapshot snapshot = await uploadTask;
         String downloadUrl = await snapshot.ref.getDownloadURL();
-
-        print('Image uploaded successfully. Download URL: $downloadUrl');
 
         await FirebaseFirestore.instance.collection('Oral Images').add({
           'imageUrl': downloadUrl,
           'userId': userId,
           'timestamp': FieldValue.serverTimestamp(),
         });
-
-        print('Firestore document added with image URL');
 
         setState(() {
           _isUploading = false;
@@ -60,7 +57,10 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ModelProcessingScreen(imageUrl: downloadUrl),
+            builder: (context) => ModelProcessingScreen(
+              imageUrl: downloadUrl,
+              patientInfo: widget.patientInfo,  // Pass patient info to next screen
+            ),
           ),
         );
 
@@ -74,7 +74,6 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
         setState(() {
           _isUploading = false;
         });
-        print('Error during upload: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to upload image: $e'),
@@ -83,7 +82,6 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
         );
       }
     } else {
-      print('Error: No image selected or user is not logged in.');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please take a valid mouth picture or log in!'),
@@ -107,26 +105,12 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.square,
-              CropAspectRatioPreset.ratio3x2,
-              CropAspectRatioPreset.original,
-              CropAspectRatioPreset.ratio4x3,
-              CropAspectRatioPreset.ratio16x9
-            ],
           ),
           IOSUiSettings(
             title: 'Crop Image',
             aspectRatioLockEnabled: false,
-            aspectRatioPresets: [
-              CropAspectRatioPreset.square,
-              CropAspectRatioPreset.ratio3x2,
-              CropAspectRatioPreset.original,
-              CropAspectRatioPreset.ratio4x3,
-              CropAspectRatioPreset.ratio16x9
-            ],
           ),
-          ]
+        ],
       );
 
       if (croppedFile == null) return;
@@ -135,7 +119,6 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
         _imageFile = File(croppedFile.path);
       });
     } catch (e) {
-      print('Error picking or cropping image: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error picking or cropping image'),
@@ -144,7 +127,6 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -183,6 +165,7 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
                   _buildStep('2. Ensure the light is sufficient to capture a clear image.'),
                   _buildStep('3. Hold the camera steady for a clear picture.'),
                   _buildStep('4. Take a picture and check the image for clarity.'),
+                  _buildStep('5. Crop the image to focus on disease.'),
                   SizedBox(height: 24),
                   Center(
                     child: Column(
@@ -207,6 +190,17 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
                         ),
                         SizedBox(height: 16),
                         ElevatedButton(
+                          onPressed: () => _pickImage(ImageSource.gallery),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            textStyle: TextStyle(fontSize: 16, fontFamily: 'GoogleSans'),
+                          ),
+                          child: Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
+                        ),
+                        SizedBox(height: 16),
+                        ElevatedButton(
                           onPressed: _isUploading ? null : _uploadImage,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
@@ -217,19 +211,6 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
                           child: _isUploading
                               ? CircularProgressIndicator(color: Colors.white)
                               : Text('Upload Picture', style: TextStyle(color: Colors.white)),
-                        ),
-                        SizedBox(height: 16),
-                        Text('OR', style: TextStyle(fontSize: 16, fontFamily: 'GoogleSans', color: Colors.grey)),
-                        SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => _pickImage(ImageSource.gallery),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            textStyle: TextStyle(fontSize: 16, fontFamily: 'GoogleSans'),
-                          ),
-                          child: Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
                         ),
                       ],
                     ),
