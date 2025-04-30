@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import '../../footer.dart'; // Assuming you still want to keep the footer widget
+import '../../footer.dart';
 
 class ScheduleScreen extends StatefulWidget {
   @override
@@ -19,19 +19,36 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     super.initState();
   }
 
-  DateTime? parseAppointmentTime(String timeStr) {
+  DateTime? _parseAppointmentDateTime(String? date, String? time) {
     try {
-      // Extract month, day and time from the string
-      final now = DateTime.now();
-      final formatted = '$timeStr ${now.year}'; // "04-23 at 8:15 PM 2025"
-      return DateFormat("MM-dd 'at' h:mm a yyyy").parse(formatted);
+      if (date == null || time == null) return null;
+
+      // Parse date in format "2025-05-20"
+      final dateParts = date.split('-');
+      if (dateParts.length != 3) return null;
+
+      final year = int.tryParse(dateParts[0]);
+      final month = int.tryParse(dateParts[1]);
+      final day = int.tryParse(dateParts[2]);
+      if (year == null || month == null || day == null) return null;
+
+      // Parse time in format "8:00 PM"
+      final timeFormat = DateFormat('h:mm a');
+      final timeOfDay = timeFormat.parse(time);
+
+      // Combine date and time
+      return DateTime(
+        year,
+        month,
+        day,
+        timeOfDay.hour,
+        timeOfDay.minute,
+      );
     } catch (e) {
-      debugPrint('Date parsing error: $e');
+      debugPrint('Error parsing date/time: $e');
       return null;
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +75,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('appointments')
-            .where('userId', isEqualTo: currentUserId) // Filter by current user
+            .where('userId', isEqualTo: currentUserId)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -76,16 +93,41 @@ class _ScheduleScreenState extends State<ScheduleScreen>
             );
           }
 
-          final allAppointments = snapshot.data!.docs
-              .map((doc) => doc.data() as Map<String, dynamic>)
+          final appointments = snapshot.data!.docs
+              .map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return {
+              'id': doc.id,
+              'doctorId': data['doctorId'] ?? 'Unknown',
+              'doctorName': data['doctorName'] ?? 'Unknown Doctor',
+              'patientName': data['patientName'] ?? 'Unknown Patient',
+              'patientAge': data['patientAge']?.toString() ?? 'Unknown',
+              'phoneNo': data['phoneNo'] ?? 'Unknown',
+              'appointmentDate': data['appointmentDate']?.toString() ?? '',
+              'appointmentTime': data['appointmentTime']?.toString() ?? '',
+              'timestamp': data['timestamp'],
+            };
+          })
               .toList();
 
           final now = DateTime.now();
-          final upcoming = allAppointments
-              .where((a) => parseAppointmentTime(a['appointmentTime'])?.isAfter(now) ?? false)
+          final upcoming = appointments
+              .where((a) {
+            final dt = _parseAppointmentDateTime(
+              a['appointmentDate'] as String?,
+              a['appointmentTime'] as String?,
+            );
+            return dt != null && dt.isAfter(now);
+          })
               .toList();
-          final done = allAppointments
-              .where((a) => parseAppointmentTime(a['appointmentTime'])?.isBefore(now) ?? false)
+          final done = appointments
+              .where((a) {
+            final dt = _parseAppointmentDateTime(
+              a['appointmentDate'] as String?,
+              a['appointmentTime'] as String?,
+            );
+            return dt != null && dt.isBefore(now);
+          })
               .toList();
 
           return Column(
@@ -155,32 +197,30 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       itemCount: appointments.length,
       itemBuilder: (context, index) {
         final appointment = appointments[index];
-        final dateTime = parseAppointmentTime(appointment['appointmentTime']);
-        final dateStr = dateTime != null ? DateFormat.MMMd().format(dateTime) : 'N/A';
-        final timeStr = dateTime != null ? DateFormat.jm().format(dateTime) : 'N/A';
+        final formattedDate = _formatDate(appointment['appointmentDate'] as String?);
+        final formattedTime = _formatTime(appointment['appointmentTime'] as String?);
 
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           color: Colors.white,
           elevation: 1,
-          // shadowColor: Colors.blue.withOpacity(0.9),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ListTile(
-                  leading: Text(
+                  leading: const Text(
                     "Patient Name:",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: "GoogleSans",
                     ),
                   ),
                   title: Text(
-                    appointment['patientName'],
+                    appointment['patientName'] as String,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -194,8 +234,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     const Icon(Icons.calendar_today, color: Colors.green, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Date: $dateStr',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,fontFamily: "GoogleSans",),
+                      'Date: $formattedDate',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, fontFamily: "GoogleSans"),
                     ),
                   ],
                 ),
@@ -205,8 +245,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     const Icon(Icons.access_time, color: Colors.blue, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Time: $timeStr',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,fontFamily: "GoogleSans",),
+                      'Time: $formattedTime',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, fontFamily: "GoogleSans"),
                     ),
                   ],
                 ),
@@ -216,8 +256,19 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     const Icon(Icons.emoji_people, color: Colors.orange, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Age: ${appointment['patientAge']}',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,fontFamily: "GoogleSans",),
+                      'Patient Age: ${appointment['patientAge']}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, fontFamily: "GoogleSans"),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.person, color: Colors.purple, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Doctor: ${appointment['doctorName']}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, fontFamily: "GoogleSans"),
                     ),
                   ],
                 ),
@@ -228,8 +279,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Phone No: ${appointment['phoneNo']}',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500,fontFamily: "GoogleSans",),
+                        'Phone: ${appointment['phoneNo']}',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, fontFamily: "GoogleSans"),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
                       ),
@@ -242,5 +293,30 @@ class _ScheduleScreenState extends State<ScheduleScreen>
         );
       },
     );
+  }
+
+  String _formatDate(String? date) {
+    if (date == null || date.isEmpty) return 'Not specified';
+
+    try {
+      final parsedDate = DateTime.parse(date);
+      return DateFormat('MMM d, yyyy').format(parsedDate);
+    } catch (e) {
+      debugPrint('Error formatting date: $e');
+      return date;
+    }
+  }
+
+  String _formatTime(String? time) {
+    if (time == null || time.isEmpty) return 'Not specified';
+
+    try {
+      final timeFormat = DateFormat('h:mm a');
+      final parsedTime = timeFormat.parse(time);
+      return timeFormat.format(parsedTime);
+    } catch (e) {
+      debugPrint('Error formatting time: $e');
+      return time;
+    }
   }
 }

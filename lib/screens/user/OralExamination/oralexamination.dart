@@ -8,7 +8,7 @@ import './modelProcessing.dart';
 import 'package:image_cropper/image_cropper.dart';
 
 class OralExaminationScreen extends StatefulWidget {
-  final Map<String, String> patientInfo; // Receive the data
+  final Map<String, String> patientInfo;
 
   OralExaminationScreen({required this.patientInfo});
 
@@ -25,6 +25,18 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
   String? getCurrentUserId() {
     User? user = _auth.currentUser;
     return user?.uid;
+  }
+
+  void _deleteImage() {
+    setState(() {
+      _imageFile = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Image removed'),
+        backgroundColor: Colors.blue,
+      ),
+    );
   }
 
   Future<void> _uploadImage() async {
@@ -59,7 +71,7 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
           MaterialPageRoute(
             builder: (context) => ModelProcessingScreen(
               imageUrl: downloadUrl,
-              patientInfo: widget.patientInfo,  // Pass patient info to next screen
+              patientInfo: widget.patientInfo,
             ),
           ),
         );
@@ -170,38 +182,55 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
                   Center(
                     child: Column(
                       children: [
-                        GestureDetector(
-                          onTap: () => _pickImage(ImageSource.camera),
-                          child: CircleAvatar(
-                            radius: 60,
-                            backgroundColor: Colors.blue.shade50,
-                            child: _imageFile == null
-                                ? Icon(Icons.camera_alt, size: 50, color: Colors.blue)
-                                : ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                _imageFile!,
-                                width: 120,
-                                height: 120,
-                                fit: BoxFit.cover,
+                        Stack(
+                          alignment: Alignment.topRight,
+                          children: [
+                            GestureDetector(
+                              onTap: () => _pickImage(ImageSource.camera),
+                              child: CircleAvatar(
+                                radius: 60,
+                                backgroundColor: Colors.blue.shade50,
+                                child: _imageFile == null
+                                    ? Icon(Icons.camera_alt, size: 50, color: Colors.blue)
+                                    : ClipRRect(
+                                  borderRadius: BorderRadius.circular(60),
+                                  child: Image.file(
+                                    _imageFile!,
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                               ),
+                            ),
+                            if (_imageFile != null)
+                              IconButton(
+                                icon: CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: Colors.red,
+                                  child: Icon(Icons.close, size: 20, color: Colors.white),
+                                ),
+                                onPressed: _deleteImage,
+                              ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Text("OR", style: TextStyle(fontFamily: 'GoogleSans', fontSize: 18)),
+                        SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: () => _pickImage(ImageSource.gallery),
+                          child: Text(
+                            'Choose from Gallery',
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontSize: 16,
+                              fontFamily: 'GoogleSans',
                             ),
                           ),
                         ),
                         SizedBox(height: 16),
                         ElevatedButton(
-                          onPressed: () => _pickImage(ImageSource.gallery),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            textStyle: TextStyle(fontSize: 16, fontFamily: 'GoogleSans'),
-                          ),
-                          child: Text('Choose from Gallery', style: TextStyle(color: Colors.white)),
-                        ),
-                        SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _isUploading ? null : _uploadImage,
+                          onPressed: _imageFile == null || _isUploading ? null : _uploadImage,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                             padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
@@ -210,7 +239,7 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
                           ),
                           child: _isUploading
                               ? CircularProgressIndicator(color: Colors.white)
-                              : Text('Upload Picture', style: TextStyle(color: Colors.white)),
+                              : Text('Submit', style: TextStyle(color: Colors.white)),
                         ),
                       ],
                     ),

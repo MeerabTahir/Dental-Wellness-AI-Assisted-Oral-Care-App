@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ViewAppointmentsPage extends StatelessWidget {
   const ViewAppointmentsPage({Key? key}) : super(key: key);
@@ -13,7 +14,45 @@ class ViewAppointmentsPage extends StatelessWidget {
         .collection('appointments')
         .get();
 
-    return querySnapshot.docs.map((doc) => doc.data()).toList();
+    return querySnapshot.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'id': doc.id,
+        'doctorId': data['doctorId'] ?? 'Unknown',
+        'doctorName': data['doctorName'] ?? 'Unknown Doctor',
+        'patientName': data['patientName'] ?? 'Unknown Patient',
+        'patientAge': data['patientAge']?.toString() ?? 'Unknown',
+        'phoneNo': data['phoneNo'] ?? 'Unknown',
+        'appointmentDate': data['appointmentDate']?.toString() ?? '',
+        'appointmentTime': data['appointmentTime']?.toString() ?? '',
+        'timestamp': data['timestamp'],
+      };
+    }).toList();
+  }
+
+  String _formatDate(String? date) {
+    if (date == null || date.isEmpty) return 'Not specified';
+
+    try {
+      final parsedDate = DateTime.parse(date);
+      return DateFormat('MMM d, yyyy').format(parsedDate);
+    } catch (e) {
+      debugPrint('Error formatting date: $e');
+      return date;
+    }
+  }
+
+  String _formatTime(String? time) {
+    if (time == null || time.isEmpty) return 'Not specified';
+
+    try {
+      final timeFormat = DateFormat('h:mm a');
+      final parsedTime = timeFormat.parse(time);
+      return timeFormat.format(parsedTime);
+    } catch (e) {
+      debugPrint('Error formatting time: $e');
+      return time;
+    }
   }
 
   @override
@@ -84,20 +123,10 @@ class ViewAppointmentsPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemBuilder: (context, index) {
                     final appointment = appointments[index];
-                    final patientName = appointment['patientName'] ?? 'N/A';
-                    final doctor = appointment['doctorName'] ?? 'N/A';
-
-                    String rawAppointment = appointment['appointmentTime'] ?? 'N/A';
-                    String datePart = 'N/A';
-                    String timePart = 'N/A';
-
-                    if (rawAppointment.contains(" at ")) {
-                      final parts = rawAppointment.split(" at ");
-                      if (parts.length == 2) {
-                        datePart = parts[0];
-                        timePart = parts[1];
-                      }
-                    }
+                    final patientName = appointment['patientName'];
+                    final doctor = appointment['doctorName'];
+                    final formattedDate = _formatDate(appointment['appointmentDate']);
+                    final formattedTime = _formatTime(appointment['appointmentTime']);
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
@@ -135,21 +164,62 @@ class ViewAppointmentsPage extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              "Date: $datePart",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontFamily: "GoogleSans",
-                                color: Colors.grey,
-                              ),
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  formattedDate,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: "GoogleSans",
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              "Time: $timePart",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontFamily: "GoogleSans",
-                                color: Colors.grey,
-                              ),
+                            Row(
+                              children: [
+                                const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  formattedTime,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: "GoogleSans",
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.phone, size: 16, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "Phone: ${appointment['phoneNo']}",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: "GoogleSans",
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                const Icon(Icons.person, size: 16, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "Age: ${appointment['patientAge']}",
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: "GoogleSans",
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

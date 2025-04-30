@@ -58,6 +58,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _passwordErrors = errors;
     });
   }
+  bool _isEmailValid(String email) {
+    final emailRegExp = RegExp(
+      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+    );
+    return emailRegExp.hasMatch(email);
+  }
+
 
 
   @override
@@ -148,6 +155,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _registerUser() async {
+    final email = _emailTextController.text.trim();
+    final password = _passwordTextController.text;
+
+    if (!_isEmailValid(email)) {
+      _showCustomSnackBar(
+        context,
+        'Please enter a valid email address.',
+        Colors.red,
+      );
+      return;
+    }
+
     if (!_isPasswordValid(_passwordTextController.text)) {
       _showCustomSnackBar(
         context,

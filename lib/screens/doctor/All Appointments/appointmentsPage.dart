@@ -11,8 +11,7 @@ class AppointmentsPage extends StatefulWidget {
   State<AppointmentsPage> createState() => _AppointmentsPageState();
 }
 
-class _AppointmentsPageState extends State<AppointmentsPage>
-    with SingleTickerProviderStateMixin {
+class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -21,17 +20,36 @@ class _AppointmentsPageState extends State<AppointmentsPage>
     super.initState();
   }
 
-  DateTime? parseAppointmentTime(String timeStr) {
+  DateTime? _parseAppointmentDateTime(String? date, String? time) {
     try {
-      final now = DateTime.now();
-      final formatted = '$timeStr ${now.year}';
-      return DateFormat("MM-dd 'at' h:mm a yyyy").parse(formatted);
+      if (date == null || time == null) return null;
+
+      // Parse date in format "2025-05-20" (YYYY-MM-DD)
+      final dateParts = date.split('-');
+      if (dateParts.length != 3) return null;
+
+      final year = int.tryParse(dateParts[0]);
+      final month = int.tryParse(dateParts[1]);
+      final day = int.tryParse(dateParts[2]);
+      if (year == null || month == null || day == null) return null;
+
+      // Parse time in format "8:00 PM"
+      final timeFormat = DateFormat('h:mm a');
+      final timeOfDay = timeFormat.parse(time);
+
+      // Combine date and time
+      return DateTime(
+        year,
+        month,
+        day,
+        timeOfDay.hour,
+        timeOfDay.minute,
+      );
     } catch (e) {
-      debugPrint('Date parsing error: $e');
+      debugPrint('Error parsing appointment date/time: $e');
       return null;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -56,8 +74,7 @@ class _AppointmentsPageState extends State<AppointmentsPage>
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('appointments')
-            .where('doctorId',
-            isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+            .where('doctorId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -77,16 +94,25 @@ class _AppointmentsPageState extends State<AppointmentsPage>
 
           final allAppointments = snapshot.data!.docs
               .map((doc) => Appointment.fromDocument(doc))
+              .where((appointment) => appointment != null)
               .toList();
 
           final now = DateTime.now();
+
+          // Filter upcoming appointments
           final upcoming = allAppointments
-              .where((a) =>
-          parseAppointmentTime(a.appointmentTime)?.isAfter(now) ?? false)
+              .where((a) {
+            final dt = _parseAppointmentDateTime(a.appointmentDate, a.appointmentTime);
+            return dt != null && dt.isAfter(now);
+          })
               .toList();
+
+          // Filter done appointments
           final done = allAppointments
-              .where((a) =>
-          parseAppointmentTime(a.appointmentTime)?.isBefore(now) ?? false)
+              .where((a) {
+            final dt = _parseAppointmentDateTime(a.appointmentDate, a.appointmentTime);
+            return dt != null && dt.isBefore(now);
+          })
               .toList();
 
           return Column(
@@ -155,27 +181,23 @@ class _AppointmentsPageState extends State<AppointmentsPage>
       itemCount: appointments.length,
       itemBuilder: (context, index) {
         final appointment = appointments[index];
-        final dateTime = parseAppointmentTime(appointment.appointmentTime);
-        final dateStr =
-        dateTime != null ? DateFormat.MMMd().format(dateTime) : 'N/A';
-        final timeStr =
-        dateTime != null ? DateFormat.jm().format(dateTime) : 'N/A';
+        final formattedDate = _formatDate(appointment.appointmentDate);
+        final formattedTime = _formatTime(appointment.appointmentTime);
 
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           color: Colors.white,
           elevation: 5,
-          shadowColor: Colors.blue.withOpacity(0.9),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ListTile(
-                  leading: Text(
+                  leading: const Text(
                     "Patient Name:",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: "GoogleSans",
@@ -185,7 +207,6 @@ class _AppointmentsPageState extends State<AppointmentsPage>
                     appointment.patientName,
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
                       fontFamily: "GoogleSans",
                     ),
                   ),
@@ -196,8 +217,8 @@ class _AppointmentsPageState extends State<AppointmentsPage>
                     const Icon(Icons.calendar_today, color: Colors.green, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Date: $dateStr',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      'Date: $formattedDate',
+                      style: const TextStyle(fontSize: 16,fontFamily: "GoogleSans",),
                     ),
                   ],
                 ),
@@ -207,8 +228,8 @@ class _AppointmentsPageState extends State<AppointmentsPage>
                     const Icon(Icons.access_time, color: Colors.blue, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Time: $timeStr',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      'Time: $formattedTime',
+                      style: const TextStyle(fontSize: 16,fontFamily: "GoogleSans",),
                     ),
                   ],
                 ),
@@ -219,7 +240,7 @@ class _AppointmentsPageState extends State<AppointmentsPage>
                     const SizedBox(width: 8),
                     Text(
                       'Age: ${appointment.patientAge}',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: const TextStyle(fontSize: 16, fontFamily: "GoogleSans",),
                     ),
                   ],
                 ),
@@ -231,7 +252,7 @@ class _AppointmentsPageState extends State<AppointmentsPage>
                     Expanded(
                       child: Text(
                         'Phone No: ${appointment.phoneNo}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 16, fontFamily: "GoogleSans",),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
                       ),
@@ -244,5 +265,30 @@ class _AppointmentsPageState extends State<AppointmentsPage>
         );
       },
     );
+  }
+
+  String _formatDate(String? date) {
+    if (date == null || date.isEmpty) return 'Not specified';
+
+    try {
+      final parsedDate = DateTime.parse(date);
+      return DateFormat('MMM d, yyyy').format(parsedDate);
+    } catch (e) {
+      debugPrint('Error formatting date: $e');
+      return date;
+    }
+  }
+
+  String _formatTime(String? time) {
+    if (time == null || time.isEmpty) return 'Not specified';
+
+    try {
+      final timeFormat = DateFormat('h:mm a');
+      final parsedTime = timeFormat.parse(time);
+      return timeFormat.format(parsedTime);
+    } catch (e) {
+      debugPrint('Error formatting time: $e');
+      return time;
+    }
   }
 }

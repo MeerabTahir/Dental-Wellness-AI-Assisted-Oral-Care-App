@@ -185,12 +185,12 @@ class _HomePageState extends State<HomePage> {
                       boxFit: BoxFit.fitHeight,
                     ),
                     buildSimpleCarouselCard(
-                      text: "Detect Oral Diseases Early – Visit Us Today!",
+                      text: "Detect Oral Diseases Visit Us Today!",
                       color: Colors.blue.shade400,
-                      imagePath: "assets/Images/diseases.png",
-                      imageHeight: double.infinity,
+                      imagePath: "assets/Images/dental disease.png",
+                      imageHeight:500,
                       imageWidth: double.infinity,
-                      boxFit: BoxFit.fitHeight,
+                      boxFit: BoxFit.fitWidth,
                     ),
                     buildSimpleCarouselCard(
                       text: "Book Appointments Easily & On Time",
@@ -347,7 +347,7 @@ class _HomePageState extends State<HomePage> {
                                           // Name
                                           Center(
                                             child: Text(
-                                              name,
+                                              "Dr. $name",
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.bold,
@@ -486,14 +486,14 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         children: [
           Expanded(
-            flex: 3,
+            flex: 4,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
               child: Text(
                 text,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   fontFamily: "GoogleSans",
                 ),
@@ -501,7 +501,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: ClipRRect(
               borderRadius: BorderRadius.only(
                 bottomRight: Radius.circular(20),

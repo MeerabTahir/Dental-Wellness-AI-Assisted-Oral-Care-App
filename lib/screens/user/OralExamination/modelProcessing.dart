@@ -236,7 +236,7 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
                 SizedBox(height: 20),
                 if (_detectedDisease != null && _confidenceScore != null && _imageBytes != null)
                   ElevatedButton(
-                    onPressed: (_detectedDisease != 'Healthy') ? () {
+                    onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -244,13 +244,14 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
                             detectedDisease: _detectedDisease!,
                             confidenceScore: _confidenceScore!,
                             imageBytes: _imageBytes!,
-                            patientInfo: widget.patientInfo, patientId: '',  // Pass patient info here
+                            patientInfo: widget.patientInfo,
+                            patientId: '', // Pass patient info here
                           ),
                         ),
                       );
-                    } : null, // Disable button if Healthy
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: (_detectedDisease != 'Healthy') ? Colors.blue : Colors.grey,
+                      backgroundColor: Colors.blue,
                       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       elevation: 4,

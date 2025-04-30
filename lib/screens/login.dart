@@ -6,6 +6,7 @@ import 'package:tooth_tales/screens/signup.dart';
 import 'package:tooth_tales/screens/user/homepage.dart';
 import 'package:tooth_tales/screens/doctor/doctorHomePage.dart';
 import 'admin/adminhomepage.dart';
+import 'forgetpassword.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -149,17 +150,11 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _resetPassword() async {
-    if (_emailTextController.text.isEmpty) {
-      _showCustomSnackBar(context, 'Enter your email to reset password.', Colors.orange);
-      return;
-    }
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailTextController.text);
-      _showCustomSnackBar(context, 'Password reset email sent!', Colors.green);
-    } catch (error) {
-      _showCustomSnackBar(context, 'Error: Check your email address.', Colors.red);
-    }
+  void _resetPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+    );
   }
 
   void _showCustomSnackBar(BuildContext context, String message, Color color) {

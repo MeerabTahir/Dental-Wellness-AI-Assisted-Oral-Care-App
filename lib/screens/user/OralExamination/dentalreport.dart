@@ -153,7 +153,7 @@ class _DentalReportState extends State<DentalReport> {
       case 'gingivitis':
         return 'Professional dental cleaning and improved oral care';
       default:
-        return 'Consult a healthcare professional.';
+        return 'You Oral Health is fine, No Suggestion.';
     }
   }
 
@@ -212,7 +212,6 @@ class _DentalReportState extends State<DentalReport> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: TextStyle(color: Colors.grey, fontSize: 12,fontFamily: "GoogleSans")),
-        SizedBox(height: 4),
         Text(value, style: TextStyle(color: valueColor, fontWeight: FontWeight.w500, fontSize: 14,fontFamily: "GoogleSans")),
       ],
     );
@@ -352,8 +351,8 @@ class _DentalReportState extends State<DentalReport> {
           // Recommended Specialist
           pw.Text('Recommended Specialist:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
-          pw.Bullet(text: 'Doctor: ${doctorNotFound ? 'General Dentist' : 'Dr. ${doctorName ?? 'Not available'}'}'),
-          pw.Bullet(text: 'Specialization: ${doctorSpecialization ?? 'General Dentistry'}'),
+          pw.Bullet(text: 'Doctor: ${doctorNotFound ? 'No Recommendation' : 'Dr. ${doctorName ?? 'Not available'}'}'),
+          pw.Bullet(text: 'Specialization: ${doctorSpecialization ?? 'No Recommendation'}'),
 
           pw.SizedBox(height: 20),
           pw.Divider(),
@@ -447,6 +446,7 @@ class _DentalReportState extends State<DentalReport> {
               left: _buildInfoItem('Name', widget.patientInfo['name'] ?? 'N/A'),
               right: _buildInfoItem('Age', widget.patientInfo['age'] ?? 'N/A'),
             ),
+            SizedBox(height: 10),
             _buildTwoColumnRow(
               left: _buildInfoItem('Gender', widget.patientInfo['gender'] ?? 'N/A'),
               right: _buildInfoItem('Medical History', widget.patientInfo['medicalHistory'] ?? 'N/A'),
@@ -485,7 +485,7 @@ class _DentalReportState extends State<DentalReport> {
             _buildSectionTitle('Clinical Presentation'),
             _buildDivider(),
             SizedBox(height: 16),
-            _buildInfoItem('Potential Symptoms', ''),
+            _buildInfoItem('Potential Symptoms',''),
             SizedBox(height: 0),
             ...getPotentialSymptoms().map((symptom) => _buildBulletPoint(symptom)),
             SizedBox(height: 24),
@@ -504,17 +504,12 @@ class _DentalReportState extends State<DentalReport> {
               right: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoItem('Recommended Specialist', doctorNotFound ? 'General Dentist' : 'Dr. ${doctorName ?? 'Not available'}'),
+                  _buildInfoItem('Recommended Specialist', doctorNotFound ? 'No Recommendation' : 'Dr. ${doctorName ?? 'Not available'}'),
                   SizedBox(height: 12),
-                  _buildInfoItem('Specialization', doctorSpecialization ?? 'General Dentistry'),
+                  _buildInfoItem('Specialization', doctorSpecialization ?? 'No Recommendation'),
                 ],
               ),
             ),
-            SizedBox(height: 24),
-            _buildSectionTitle('Diagnostic Notes'),
-            _buildDivider(),
-            SizedBox(height: 16),
-            _buildInfoItem('AI Model Used', 'Convolutional Neural Network (CNN)'),
           ],
         ),
       ),

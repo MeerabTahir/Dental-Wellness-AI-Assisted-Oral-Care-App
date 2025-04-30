@@ -6,10 +6,11 @@ class Appointment {
   String doctorName;
   String patientName;
   String patientAge;
-  String appointmentTime;
   Timestamp timestamp;
   String userId;
   String phoneNo;
+  String appointmentDate;
+  String appointmentTime;
 
   Appointment({
     this.id = '', // Default value
@@ -18,9 +19,12 @@ class Appointment {
     required this.patientName,
     required this.patientAge,
     required this.phoneNo,
-    required this.appointmentTime,
     required this.timestamp,
     required this.userId,
+    required this.appointmentDate,
+    required this.appointmentTime,
+
+
   });
 
   factory Appointment.fromDocument(DocumentSnapshot doc) {
@@ -32,9 +36,10 @@ class Appointment {
       patientName: data['patientName'] ?? '',
       patientAge: data['patientAge'] ?? '',
       phoneNo: data['phoneNo'] ?? '',
-      appointmentTime: data['appointmentTime'] ?? '',
       timestamp: data['timestamp'] ?? Timestamp.now(),
       userId: data['userId'] ?? '',
+      appointmentDate: data['appointmentDate'] ?? '',
+      appointmentTime: data['appointmentTime'] ?? '',
     );
   }
 
@@ -48,6 +53,8 @@ class Appointment {
       'appointmentTime': appointmentTime,
       'timestamp': timestamp,
       'userId': userId,
+      'appointmentDate': appointmentDate,
+      'appointmentTime': appointmentTime,
     };
   }
 }

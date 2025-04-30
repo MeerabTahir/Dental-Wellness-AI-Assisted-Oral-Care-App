@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tooth_tales/screens/user/Feedback%20&%20Query/feedback.dart';
 import 'package:tooth_tales/screens/user/homepage.dart';
 import 'ChatsAndTips/chat.dart';
 import 'login.dart';
@@ -14,6 +15,18 @@ class FooterScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          IconButton(
+            icon: Icon(
+              Icons.person,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(
               Icons.home,
@@ -40,29 +53,13 @@ class FooterScreen extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(
-              Icons.logout,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              FirebaseAuth.instance.signOut().then((value) {
-                print("Signed Out");
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                      (route) => false,
-                );
-              });
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.person,
+              Icons.feedback,
               color: Colors.white,
             ),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfilePage()),
+                MaterialPageRoute(builder: (context) => FeedbackScreen()),
               );
             },
           ),
