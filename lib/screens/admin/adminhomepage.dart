@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../login.dart';
 
@@ -15,7 +16,7 @@ class AdminHomePage extends StatefulWidget {
 }
 
 class _AdminHomePageState extends State<AdminHomePage> {
-  String adminName = "John Doe";
+  String adminName = "Admin";
   bool isLoading = true;
   String currentDate = '';
 
@@ -23,19 +24,19 @@ class _AdminHomePageState extends State<AdminHomePage> {
   void initState() {
     super.initState();
     _fetchAdminName();
-    _getCurrentDate();
   }
 
   Future<void> _fetchAdminName() async {
     try {
-      DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+      DocumentSnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore
+          .instance
           .collection('User')
           .doc(widget.adminId)
           .get();
 
       if (snapshot.exists) {
         setState(() {
-          adminName = snapshot.data()?['userName'] ?? "John Doe";
+          adminName = snapshot.data()?['userName'] ?? "Admin";
           isLoading = false;
         });
       }
@@ -47,202 +48,162 @@ class _AdminHomePageState extends State<AdminHomePage> {
     }
   }
 
-  void _getCurrentDate() {
-    final DateTime now = DateTime.now();
-    final DateFormat dateFormat = DateFormat("MM-dd-yyyy EEEE");
-    setState(() {
-      currentDate = dateFormat.format(now);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.blueAccent,
+        foregroundColor: Colors.black,
+        backgroundColor: Colors.white,
+        elevation: 0,
         title: Text(
-          "Welcome Back",
-          style: const TextStyle(
-            color: Colors.white,
+          "Admin Dashboard",
+          style: TextStyle(
+            color:Colors.black,
             fontFamily: "GoogleSans",
-            fontSize: 18,
-            // fontWeight: FontWeight.bold,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+
           ),
         ),
         actions: [
           IconButton(
             onPressed: () {
-                FirebaseAuth.instance.signOut().then((value) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
-                        (route) => false,
-                  );
-                }).catchError((e) {
-                  print('Error signing out: $e');
-                });
-              },
-            icon: const Icon(Icons.logout, color: Colors.white),
+              FirebaseAuth.instance.signOut().then((value) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false,
+                );
+              }).catchError((e) {
+                print('Error signing out: $e');
+              });
+            },
+            icon: const Icon(Icons.logout),
             tooltip: "Logout",
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Show current date with calendar icon
-            currentDate.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.blueGrey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today, color: Colors.blue, size: 30),
-                  const SizedBox(width: 10),
-                  Text(
-                    currentDate,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: "GoogleSans",
-                      color: Colors.black,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+
+              Card(
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 4,
+                child: Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue[600]!, Colors.blue[400]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Card(
-              color: Colors.blue[50],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              shadowColor: Colors.black.withOpacity(0.2),
-              elevation: 6,
-              child: Padding(
-                padding: const EdgeInsets.all(30.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
+                  child: Row(
+                    children: [
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Hello, $adminName!",
-                            style: const TextStyle(
-                              fontSize: 22,
+                            "Welcome back,",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            adminName,
+                            style: TextStyle(
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                               fontFamily: "GoogleSans",
-                              color: Colors.black,
+                              color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            "You're managing the Dental Wellness App.",
+                          SizedBox(height: 4),
+                          Text(
+                            "You're managing the \n Dental Wellness App",
                             style: TextStyle(
-                              fontSize: 16,
                               fontFamily: "GoogleSans",
-                              color: Colors.black54,
+                              fontSize: 14,
+
+                              color: Colors.white.withOpacity(0.9),
                             ),
                           ),
+
                         ],
                       ),
-                    ),
-                    Image.asset(
-                      'assets/Images/checklist.png',
-                      width: 100,
-                      height: 100,
-                    ),
-                  ],
+                      SizedBox(width: 40),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Image.asset(
+                          'assets/Images/checklist.png',
+                          width: 150,
+                          height: 150,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-                children: [
-                  _buildCard(
-                    color: Colors.blue.shade200,
-                    icon: Icons.people,
-                    title: "Users",
-                    onTap: () {
-                      Navigator.pushNamed(context, '/manageusers');
-                    },
-                  ),
-                  _buildCard(
-                    color: Colors.pink.shade200,
-                    icon: Icons.local_hospital,
-                    title: "Dentists",
-                    onTap: () {
-                      Navigator.pushNamed(context, '/managedoctor');
-                    },
-                  ),
-                  _buildCard(
-                    color: Colors.purple.shade200,
-                    icon: Icons.calendar_today,
-                    title: "Appointments",
-                    onTap: () {
-                      Navigator.pushNamed(context, '/viewappointments');
-                    },
-                  ),
-                  _buildCard(
-                    color: Colors.orange.shade200,
-                    icon: Icons.add,
-                    title: "Add Dentists",
-                    onTap: () {
-                      Navigator.pushNamed(context, '/doctorregisterpage');
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1, end: 0),
 
-  Widget _buildCard({
-    required Color color,
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        color: color,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        elevation: 6,
-        shadowColor: Colors.black.withOpacity(0.2),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.white, size: 60),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontFamily: "GoogleSans",
-                  fontWeight: FontWeight.bold,
-                ),
+              SizedBox(height: 32),
+
+              // Dashboard Grid
+              GridView.count(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
+                children: [
+                  _buildDashboardCard(
+                    context,
+                    icon: Icons.people_alt_rounded,
+                    title: "Users",
+                    color: Colors.blue[400]!,
+                    onTap: () => Navigator.pushNamed(context, '/manageusers'),
+                  ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
+
+                  _buildDashboardCard(
+                    context,
+                    icon: Icons.medical_services_rounded,
+                    title: "Dentists",
+                    color: Colors.teal[400]!,
+                    onTap: () => Navigator.pushNamed(context, '/managedoctor'),
+                  ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0),
+
+                  _buildDashboardCard(
+                    context,
+                    icon: Icons.calendar_month_rounded,
+                    title: "Appointments",
+                    color: Colors.purple[400]!,
+                    onTap: () => Navigator.pushNamed(context, '/viewappointments'),
+                  ).animate().fadeIn(duration: 700.ms).slideY(begin: 0.1, end: 0),
+
+                  _buildDashboardCard(
+                    context,
+                    icon: Icons.person_add_alt_1_rounded,
+                    title: "Add Dentists",
+                    color: Colors.orange[400]!,
+                    onTap: () => Navigator.pushNamed(context, '/doctorregisterpage'),
+                  ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.1, end: 0),
+                ],
               ),
             ],
           ),
@@ -251,10 +212,54 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  // void _logout(BuildContext context) {
-  //   Navigator.pop(context); // Example: Navigate back to the login screen
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     const SnackBar(content: Text("Logged out successfully")),
-  //   );
-  // }
+  Widget _buildDashboardCard(
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required Color color,
+        required VoidCallback onTap,
+      }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: [color, Color.lerp(color, Colors.black, 0.1)!],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 32, color: Colors.white),
+              ),
+              SizedBox(height: 16),
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: "GoogleSans"
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

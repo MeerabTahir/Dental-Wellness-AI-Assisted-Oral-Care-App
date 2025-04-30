@@ -126,11 +126,6 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "${doctor['profession'] ?? 'No Profession'}",
-                  style: const TextStyle(fontSize: 14, fontFamily: "GoogleSans"),
-                ),
-                const SizedBox(height: 4),
-                Text(
                   "${doctor['location'] ?? 'No Location Provided'}",
                   style: const TextStyle(
                     fontSize: 14,

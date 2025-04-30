@@ -172,19 +172,23 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
               fit: BoxFit.contain,
             ),
             const SizedBox(height: 16),
-            const Text(
-              "All Users",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                fontFamily: "GoogleSans",
-                color: Colors.black87,
+            Center(
+              child: const Text(
+                "All Users",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: "GoogleSans",
+                  color: Colors.black87,
+                ),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "You can see all users here",
-              style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
+            Center(
+              child: const Text(
+                "You can see all users here",
+                style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
+              ),
             ),
             const SizedBox(height: 16),
             users.isEmpty
