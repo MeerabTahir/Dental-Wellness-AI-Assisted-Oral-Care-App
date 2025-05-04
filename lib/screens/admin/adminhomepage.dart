@@ -228,12 +228,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
             borderRadius: BorderRadius.circular(16)),
         child: Container(
           decoration: BoxDecoration(
+            color: Colors.white, // White background for the card
             borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              colors: [color, Color.lerp(color, Colors.black, 0.1)!],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -241,19 +237,19 @@ class _AdminHomePageState extends State<AdminHomePage> {
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: color.withOpacity(0.2), // Lighter version of the color
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 32, color: Colors.white),
+                child: Icon(icon, size: 32, color: color), // Icon in the original color
               ),
               SizedBox(height: 16),
               Text(
                 title,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: "GoogleSans"
+                    color: Colors.black, // Black text for better contrast on white
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "GoogleSans"
                 ),
               ),
             ],

@@ -23,11 +23,10 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
   double? _confidenceScore;
 
   final Map<String, String> diseaseDescriptions = {
-    'Gingivitis': 'Gingivitis is inflammation of the gums, usually caused by plaque buildup and poor oral hygiene.',
     'Mouth Ulcer': 'Mouth ulcers are small, painful sores inside the mouth caused by irritation, stress, or certain infections.',
     'Dental Cavity': 'Dental cavities are permanently damaged areas in teeth caused by decay, often due to poor brushing habits.',
-    'Cancer': 'Oral cancer refers to uncontrollable growth of cells in the mouth area that can be life-threatening if not treated early.',
     'Healthy': 'No dental issues detected. Your oral health looks good!',
+    'Cancer': 'Oral cancer refers to uncontrollable growth of cells in the mouth area that can be life-threatening if not treated early.'
   };
 
   @override
@@ -44,7 +43,7 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
 
   Future<void> _loadModelAndImage() async {
     try {
-      _interpreter = await Interpreter.fromAsset('assets/model/disease_model.tflite');
+      _interpreter = await Interpreter.fromAsset('assets/model/mobilenet_oral_diseases.tflite');
       final response = await http.get(Uri.parse(widget.imageUrl));
       if (response.statusCode == 200) {
         _imageBytes = response.bodyBytes;
@@ -78,13 +77,12 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
           }));
 
       var inputTensor = [input];
-      var output = List.filled(1 * 5, 0.0).reshape([1, 5]);
+      var output = List.filled(1 * 4, 0.0).reshape([1, 4]);
 
       _interpreter.run(inputTensor, output);
 
       List<double> probabilities = output[0];
       List<String> classLabels = [
-        'Gingivitis',
         'Mouth Ulcer',
         'Dental Cavity',
         'Healthy',

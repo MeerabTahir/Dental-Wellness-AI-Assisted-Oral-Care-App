@@ -122,6 +122,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           .collection('appointments')
           .where('doctorId', isEqualTo: widget.doctorId)
           .where('appointmentDate', isEqualTo: formattedDate)
+
           .get();
 
       setState(() {

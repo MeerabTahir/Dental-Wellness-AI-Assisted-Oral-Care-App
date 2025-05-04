@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Stateful Widget for TextField with Password Visibility Toggle
 class ReusableTextField extends StatefulWidget {
@@ -6,6 +7,7 @@ class ReusableTextField extends StatefulWidget {
   final IconData icon;
   final bool isPasswordType;
   final TextEditingController controller;
+  // final List<String>? autofillHints;
 
 
   const ReusableTextField({
@@ -14,6 +16,7 @@ class ReusableTextField extends StatefulWidget {
     required this.icon,
     required this.isPasswordType,
     required this.controller,
+    // this.autofillHints,
 
   }) : super(key: key);
 
@@ -31,6 +34,8 @@ class _ReusableTextFieldState extends State<ReusableTextField> {
       obscureText: widget.isPasswordType ? _obscureText : false,
       enableSuggestions: !widget.isPasswordType,
       autocorrect: !widget.isPasswordType,
+      // autofillHints: widget.autofillHints,
+      // textInputAction: TextInputAction.next,
       cursorColor: Colors.black,
       style: TextStyle(color: Colors.black.withOpacity(0.9), fontFamily: "GoogleSans"),
       decoration: InputDecoration(
@@ -44,6 +49,7 @@ class _ReusableTextFieldState extends State<ReusableTextField> {
           onPressed: () {
             setState(() {
               _obscureText = !_obscureText;
+              autofillHints: [AutofillHints.email];
             });
           },
         )
@@ -60,6 +66,7 @@ class _ReusableTextFieldState extends State<ReusableTextField> {
         ),
       ),
       keyboardType: widget.isPasswordType ? TextInputType.visiblePassword : TextInputType.text,
+      onEditingComplete: () => TextInput.finishAutofillContext(),
     );
   }
 }

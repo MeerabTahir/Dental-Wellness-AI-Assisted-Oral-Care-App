@@ -109,8 +109,6 @@ class _DentalReportState extends State<DentalReport> {
   String _mapDiseaseToSpecialization(String disease) {
     String normalizedDisease = disease.toLowerCase().trim();
     switch (normalizedDisease) {
-      case 'gingivitis':
-        return 'Periodontist';
       case 'ulcer':
       case 'mouth ulcer':
         return 'Oral Medicine Specialist';
@@ -134,8 +132,6 @@ class _DentalReportState extends State<DentalReport> {
         return ['Painful sores', 'Swelling inside the mouth', 'Difficulty eating or speaking'];
       case 'caries':
         return ['Toothache', 'Sensitivity to hot/cold', 'Visible holes or pits in teeth'];
-      case 'gingivitis':
-        return ['Swollen gums', 'Bleeding while brushing', 'Bad breath'];
       default:
         return ['No specific symptoms listed.'];
     }
@@ -150,8 +146,6 @@ class _DentalReportState extends State<DentalReport> {
         return 'Consult a dentist if persists beyond two weeks';
       case 'caries':
         return 'Dental filling or cavity treatment recommended';
-      case 'gingivitis':
-        return 'Professional dental cleaning and improved oral care';
       default:
         return 'You Oral Health is fine, No Suggestion.';
     }

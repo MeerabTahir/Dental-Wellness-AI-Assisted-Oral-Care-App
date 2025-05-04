@@ -72,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   isPasswordType: false,
                   controller: _emailTextController,
                 ),
+
                 SizedBox(height: 20),
                 ReusableTextField(
                   text: "Enter Password",
@@ -86,7 +87,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _resetPassword,
                     child: Text(
                       "Forgot Password?",
-                      style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold,fontFamily: 'GoogleSans'),
+                      style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'GoogleSans'),
                     ),
                   ),
                 ),
@@ -103,9 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _signInUser() async {
     try {
-      UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
-        email: _emailTextController.text,
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailTextController.text.trim(),
         password: _passwordTextController.text,
       );
       String userId = userCredential.user!.uid;
@@ -122,7 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => AdminHomePage(adminId: "9zMrY7yPCFfQW3mG88cz47MlZau2"),
+              builder: (context) =>
+                  AdminHomePage(adminId: "9zMrY7yPCFfQW3mG88cz47MlZau2"),
             ),
           );
           return;
@@ -180,14 +185,19 @@ Row signUpOption(BuildContext context) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
-      Text("Don't have an account?", style: TextStyle(color: Colors.black, fontFamily: "GoogleSans")),
+      Text("Don't have an account?",
+          style: TextStyle(color: Colors.black, fontFamily: "GoogleSans")),
       GestureDetector(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => SignUpScreen()));
         },
         child: Text(
           " Sign Up",
-          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontFamily: "GoogleSans"),
+          style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+              fontFamily: "GoogleSans"),
         ),
       ),
     ],

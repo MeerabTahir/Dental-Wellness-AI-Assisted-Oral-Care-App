@@ -55,7 +55,7 @@ flutter:
 
   assets:
     - assets/Images/
-    - assets/model/disease_model.tflite
+    - assets/model/mobilenet_oral_diseases.tflite
 
   fonts:
     - family: Poppins

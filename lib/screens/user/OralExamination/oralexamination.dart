@@ -219,15 +219,25 @@ class _OralExaminationScreenState extends State<OralExaminationScreen> {
                         SizedBox(height: 10),
                         GestureDetector(
                           onTap: () => _pickImage(ImageSource.gallery),
-                          child: Text(
-                            'Choose from Gallery',
-                            style: TextStyle(
-                              color: Colors.grey[700],
-                              fontSize: 16,
-                              fontFamily: 'GoogleSans',
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Upload Image',
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 16,
+                                fontFamily: 'GoogleSans',
+                                // decoration: TextDecoration.underline,
+                              ),
                             ),
                           ),
                         ),
+
                         SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _imageFile == null || _isUploading ? null : _uploadImage,

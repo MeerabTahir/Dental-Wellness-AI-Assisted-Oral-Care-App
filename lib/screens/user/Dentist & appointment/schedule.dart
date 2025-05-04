@@ -50,6 +50,19 @@ class _ScheduleScreenState extends State<ScheduleScreen>
     }
   }
 
+  List<Map<String, dynamic>> _sortAppointmentsByDateDesc(List<Map<String, dynamic>> appointments) {
+    return appointments..sort((a, b) {
+      final aDt = _parseAppointmentDateTime(a['appointmentDate'], a['appointmentTime']);
+      final bDt = _parseAppointmentDateTime(b['appointmentDate'], b['appointmentTime']);
+
+      if (aDt == null && bDt == null) return 0;
+      if (aDt == null) return 1;
+      if (bDt == null) return -1;
+
+      return bDt.compareTo(aDt); // Descending order (newest first)
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     String currentUserId = FirebaseAuth.instance.currentUser!.uid;
@@ -76,6 +89,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
         stream: FirebaseFirestore.instance
             .collection('appointments')
             .where('userId', isEqualTo: currentUserId)
+            .orderBy('timestamp', descending: true) // Add this line for initial sorting
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -111,7 +125,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
               .toList();
 
           final now = DateTime.now();
-          final upcoming = appointments
+          final upcoming = _sortAppointmentsByDateDesc(appointments
               .where((a) {
             final dt = _parseAppointmentDateTime(
               a['appointmentDate'] as String?,
@@ -119,8 +133,8 @@ class _ScheduleScreenState extends State<ScheduleScreen>
             );
             return dt != null && dt.isAfter(now);
           })
-              .toList();
-          final done = appointments
+              .toList());
+          final done = _sortAppointmentsByDateDesc(appointments
               .where((a) {
             final dt = _parseAppointmentDateTime(
               a['appointmentDate'] as String?,
@@ -128,7 +142,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
             );
             return dt != null && dt.isBefore(now);
           })
-              .toList();
+              .toList());
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -188,6 +202,7 @@ class _ScheduleScreenState extends State<ScheduleScreen>
       bottomNavigationBar: FooterScreen(),
     );
   }
+
 
   Widget _buildAppointmentList(List<Map<String, dynamic>> appointments) {
     return appointments.isEmpty

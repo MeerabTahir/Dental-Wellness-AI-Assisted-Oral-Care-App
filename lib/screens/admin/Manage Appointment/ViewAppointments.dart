@@ -43,9 +43,55 @@ class _ViewAppointmentsPageState extends State<ViewAppointmentsPage> {
     }
   }
 
+  DateTime? _parseAppointmentDateTime(String? date, String? time) {
+    try {
+      if (date == null || time == null) return null;
+
+      // Parse date in format "2025-05-20"
+      final dateParts = date.split('-');
+      if (dateParts.length != 3) return null;
+
+      final year = int.tryParse(dateParts[0]);
+      final month = int.tryParse(dateParts[1]);
+      final day = int.tryParse(dateParts[2]);
+      if (year == null || month == null || day == null) return null;
+
+      // Parse time in format "8:00 PM"
+      final timeFormat = DateFormat('h:mm a');
+      final timeOfDay = timeFormat.parse(time);
+
+      // Combine date and time
+      return DateTime(
+        year,
+        month,
+        day,
+        timeOfDay.hour,
+        timeOfDay.minute,
+      );
+    } catch (e) {
+      debugPrint('Error parsing date/time: $e');
+      return null;
+    }
+  }
+
+  List<Map<String, dynamic>> _sortAppointmentsByDateDesc(List<Map<String, dynamic>> appointments) {
+    return appointments..sort((a, b) {
+      final aDt = _parseAppointmentDateTime(a['appointmentDate'], a['appointmentTime']);
+      final bDt = _parseAppointmentDateTime(b['appointmentDate'], b['appointmentTime']);
+
+      if (aDt == null && bDt == null) return 0;
+      if (aDt == null) return 1;
+      if (bDt == null) return -1;
+
+      return bDt.compareTo(aDt); // Descending order (newest first)
+    });
+  }
+
   Future<List<Map<String, dynamic>>> fetchAppointments() async {
     try {
-      Query query = FirebaseFirestore.instance.collection('appointments');
+      Query query = FirebaseFirestore.instance.collection('appointments')
+          .orderBy('appointmentDate', descending: true) // Primary sort by date
+          .orderBy('appointmentTime', descending: true); // Secondary sort by time
 
       if (_selectedSpecialization != 'All') {
         // First get doctor IDs with this specialization
@@ -65,7 +111,7 @@ class _ViewAppointmentsPageState extends State<ViewAppointmentsPage> {
 
       final querySnapshot = await query.get();
 
-      return querySnapshot.docs.map((doc) {
+      final appointments = querySnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return {
           'id': doc.id,
@@ -80,6 +126,9 @@ class _ViewAppointmentsPageState extends State<ViewAppointmentsPage> {
           'timestamp': data['timestamp'],
         };
       }).toList();
+
+      // Additional client-side sorting for more accurate ordering
+      return _sortAppointmentsByDateDesc(appointments);
     } catch (e) {
       debugPrint('Error fetching appointments: $e');
       return [];
@@ -206,21 +255,23 @@ class _ViewAppointmentsPageState extends State<ViewAppointmentsPage> {
                         fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        _selectedSpecialization == 'All'
-                            ? "All Appointments"
-                            : "$_selectedSpecialization Appointments",
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: "GoogleSans",
+                      Center(
+                        child: Text(
+                          _selectedSpecialization == 'All'
+                              ? "All Appointments"
+                              : "$_selectedSpecialization Appointments",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: "GoogleSans",
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
                         "Filtered by selected specialization",
                         style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontFamily: "GoogleSans"),
                       ),
                       const SizedBox(height: 16),
@@ -272,7 +323,13 @@ class _ViewAppointmentsPageState extends State<ViewAppointmentsPage> {
                                       fontFamily: "GoogleSans",
                                     ),
                                   ),
-
+                                  Text(
+                                    "Specialization: $specialization",
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontFamily: "GoogleSans",
+                                    ),
+                                  ),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
