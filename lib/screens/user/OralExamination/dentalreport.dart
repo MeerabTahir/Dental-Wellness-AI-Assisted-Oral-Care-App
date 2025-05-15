@@ -37,7 +37,14 @@ class _DentalReportState extends State<DentalReport> {
   @override
   void initState() {
     super.initState();
-    fetchRecommendedDoctor();
+    // Only fetch doctor if disease is not "healthy"
+    if (widget.detectedDisease.toLowerCase() != "healthy") {
+      fetchRecommendedDoctor();
+    } else {
+      setState(() {
+        loadingDoctor = false;
+      });
+    }
   }
 
   Future<void> fetchRecommendedDoctor() async {
@@ -130,8 +137,10 @@ class _DentalReportState extends State<DentalReport> {
         return ['Red or white patches', 'Persistent mouth sore', 'Difficulty swallowing'];
       case 'mouth ulcer':
         return ['Painful sores', 'Swelling inside the mouth', 'Difficulty eating or speaking'];
-      case 'caries':
+      case 'dental cavity':
         return ['Toothache', 'Sensitivity to hot/cold', 'Visible holes or pits in teeth'];
+      case 'healthy':
+        return ['No symptoms detected', 'Oral health appears normal'];
       default:
         return ['No specific symptoms listed.'];
     }
@@ -144,10 +153,12 @@ class _DentalReportState extends State<DentalReport> {
         return 'Immediate consultation with an oncologist';
       case 'mouth ulcer':
         return 'Consult a dentist if persists beyond two weeks';
-      case 'caries':
+      case 'dental cavity':
         return 'Dental filling or cavity treatment recommended';
+      case 'healthy':
+        return 'Maintain regular oral hygiene and dental check-ups';
       default:
-        return 'You Oral Health is fine, No Suggestion.';
+        return 'No specific action recommended';
     }
   }
 
@@ -156,15 +167,8 @@ class _DentalReportState extends State<DentalReport> {
   }
 
   String getCurrentTime() {
-    // Get current date and time
-    DateTime now = DateTime.now();
-
-    // Format the time (you can adjust the format as needed)
-    String formattedTime = DateFormat('HH:mm:ss').format(now);
-
-    return formattedTime;
+    return DateFormat('HH:mm:ss').format(DateTime.now());
   }
-
 
   String getSeverityLevel(double confidenceScore) {
     double percentage = confidenceScore * 100;
@@ -205,8 +209,8 @@ class _DentalReportState extends State<DentalReport> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.grey, fontSize: 12,fontFamily: "GoogleSans")),
-        Text(value, style: TextStyle(color: valueColor, fontWeight: FontWeight.w500, fontSize: 14,fontFamily: "GoogleSans")),
+        Text(label, style: TextStyle(color: Colors.grey, fontSize: 12, fontFamily: "GoogleSans")),
+        Text(value, style: TextStyle(color: valueColor, fontWeight: FontWeight.w500, fontSize: 14, fontFamily: "GoogleSans")),
       ],
     );
   }
@@ -215,8 +219,8 @@ class _DentalReportState extends State<DentalReport> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("• ", style: TextStyle(fontSize: 16,fontFamily: "GoogleSans")),
-        Container(child: Text(text, style: TextStyle(fontSize: 14,fontFamily: "GoogleSans"))),
+        Text("• ", style: TextStyle(fontSize: 16, fontFamily: "GoogleSans")),
+        Container(child: Text(text, style: TextStyle(fontSize: 14, fontFamily: "GoogleSans"))),
       ],
     );
   }
@@ -238,7 +242,7 @@ class _DentalReportState extends State<DentalReport> {
         children: [
           Icon(Icons.local_hospital, color: Colors.blue, size: 48),
           SizedBox(height: 8),
-          Text('Oral Scan Report', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,fontFamily: "GoogleSans")),
+          Text('Oral Scan Report', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: "GoogleSans")),
         ],
       ),
     );
@@ -277,8 +281,13 @@ class _DentalReportState extends State<DentalReport> {
                     pw.Text('Age: ${widget.patientInfo['age'] ?? 'N/A'}'),
                     pw.SizedBox(height: 8),
                     pw.Text('Gender: ${widget.patientInfo['gender'] ?? 'N/A'}'),
-                    pw.SizedBox(height: 8),
-                    pw.Text('Medical History: ${widget.patientInfo['medicalHistory'] ?? 'N/A'}'),
+                    if (widget.patientInfo['medicalHistory']?.isNotEmpty ?? false)
+                      pw.Column(
+                        children: [
+                          pw.SizedBox(height: 8),
+                          pw.Text('Medical History: ${widget.patientInfo['medicalHistory']}'),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -323,8 +332,9 @@ class _DentalReportState extends State<DentalReport> {
           pw.Text('Diagnosis Details:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
           pw.Bullet(text: 'Detected Condition: ${widget.detectedDisease}'),
-          pw.Bullet(text: 'Confidence Level: ${(widget.confidenceScore * 100).toStringAsFixed(1)}%'),
-          pw.Bullet(text: 'Severity: ${getSeverityLevel(widget.confidenceScore)}'),
+          if (widget.detectedDisease.toLowerCase() != 'healthy')
+            pw.Bullet(text: 'Severity: ${getSeverityLevel(widget.confidenceScore)}'),
+
 
           pw.SizedBox(height: 10),
 
@@ -340,13 +350,14 @@ class _DentalReportState extends State<DentalReport> {
           pw.SizedBox(height: 8),
           pw.Text(getSuggestedAction(), style: pw.TextStyle(fontSize: 14)),
 
-          pw.SizedBox(height: 10),
-
-          // Recommended Specialist
-          pw.Text('Recommended Specialist:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 8),
-          pw.Bullet(text: 'Doctor: ${doctorNotFound ? 'No Recommendation' : 'Dr. ${doctorName ?? 'Not available'}'}'),
-          pw.Bullet(text: 'Specialization: ${doctorSpecialization ?? 'No Recommendation'}'),
+          // Only show recommended specialist if disease is not "healthy"
+          if (widget.detectedDisease.toLowerCase() != "healthy") ...[
+            pw.SizedBox(height: 10),
+            pw.Text('Recommended Specialist:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 8),
+            pw.Bullet(text: 'Doctor: ${doctorNotFound ? 'No Recommendation' : 'Dr. ${doctorName ?? 'Not available'}'}'),
+            pw.Bullet(text: 'Specialization: ${doctorSpecialization ?? 'No Recommendation'}'),
+          ],
 
           pw.SizedBox(height: 20),
           pw.Divider(),
@@ -381,9 +392,10 @@ class _DentalReportState extends State<DentalReport> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final isHealthy = widget.detectedDisease.toLowerCase() == "healthy";
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -398,7 +410,7 @@ class _DentalReportState extends State<DentalReport> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-      body: loadingDoctor
+      body: loadingDoctor && !isHealthy
           ? Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -432,7 +444,8 @@ class _DentalReportState extends State<DentalReport> {
           children: [
             _buildReportHeader(),
             SizedBox(height: 32),
-            // Center(child: Image.memory(widget.imageBytes, height: 250, width: 250),),
+
+            // Patient Information Section
             _buildSectionTitle('Patient Information'),
             _buildDivider(),
             SizedBox(height: 16),
@@ -443,9 +456,13 @@ class _DentalReportState extends State<DentalReport> {
             SizedBox(height: 10),
             _buildTwoColumnRow(
               left: _buildInfoItem('Gender', widget.patientInfo['gender'] ?? 'N/A'),
-              right: _buildInfoItem('Medical History', widget.patientInfo['medicalHistory'] ?? 'N/A'),
+              right: widget.patientInfo['medicalHistory']?.isNotEmpty ?? false
+                  ? _buildInfoItem('Medical History', widget.patientInfo['medicalHistory']!)
+                  : Container(),
             ),
             SizedBox(height: 16),
+
+            // Report Information Section
             _buildSectionTitle('Report Information'),
             _buildDivider(),
             SizedBox(height: 16),
@@ -454,6 +471,8 @@ class _DentalReportState extends State<DentalReport> {
               right: _buildInfoItem('Report Date', getCurrentDate()),
             ),
             SizedBox(height: 16),
+
+            // Examination Findings Section
             _buildSectionTitle('Examination Findings'),
             _buildDivider(),
             SizedBox(height: 16),
@@ -463,26 +482,29 @@ class _DentalReportState extends State<DentalReport> {
                 children: [
                   _buildInfoItem('Detected Condition', widget.detectedDisease),
                   SizedBox(height: 12),
-                  _buildInfoItem('Confidence Level', '${(widget.confidenceScore * 100).toStringAsFixed(1)}%', valueColor: getSeverityColor(widget.confidenceScore)),
                 ],
               ),
               right: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoItem('Severity', getSeverityLevel(widget.confidenceScore)),
-                  SizedBox(height: 12),
-                  _buildInfoItem('Analysis Date', getCurrentDate()),
+                  if (widget.detectedDisease.toLowerCase() != 'healthy')
+                    _buildInfoItem('Severity', getSeverityLevel(widget.confidenceScore)),
+
                 ],
               ),
             ),
             SizedBox(height: 24),
+
+            // Clinical Presentation Section
             _buildSectionTitle('Clinical Presentation'),
             _buildDivider(),
             SizedBox(height: 16),
-            _buildInfoItem('Potential Symptoms',''),
+            _buildInfoItem('Potential Symptoms', ''),
             SizedBox(height: 0),
             ...getPotentialSymptoms().map((symptom) => _buildBulletPoint(symptom)),
             SizedBox(height: 24),
+
+            // Medical Recommendations Section
             _buildSectionTitle('Medical Recommendations'),
             _buildDivider(),
             SizedBox(height: 16),
@@ -495,7 +517,9 @@ class _DentalReportState extends State<DentalReport> {
                   _buildInfoItem('Preventive Measures', 'Maintain oral hygiene\nAvoid tobacco/alcohol\nRegular check-ups'),
                 ],
               ),
-              right: Column(
+              right: isHealthy
+                  ? Container() // Empty container if healthy
+                  : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildInfoItem('Recommended Specialist', doctorNotFound ? 'No Recommendation' : 'Dr. ${doctorName ?? 'Not available'}'),
@@ -509,5 +533,4 @@ class _DentalReportState extends State<DentalReport> {
       ),
     );
   }
-
 }

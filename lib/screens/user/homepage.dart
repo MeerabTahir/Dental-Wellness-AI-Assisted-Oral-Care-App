@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tooth_tales/screens/user/Profile/patientProfile.dart';
-
 import '../login.dart';
 import '../footer.dart';
+import '../settings_page.dart';
 import 'Feedback & Query/feedback.dart';
 
 class HomePage extends StatefulWidget {
@@ -43,6 +44,18 @@ class _HomePageState extends State<HomePage> {
       print('Error fetching user data: $e');
     }
   }
+  void logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    await FirebaseAuth.instance.signOut();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+          (route) => false,
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -70,13 +83,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: Icon(Icons.logout, color: Colors.black),
             onPressed: () {
-              FirebaseAuth.instance.signOut().then((value) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                      (route) => false,
-                );
-              });
+              logout(context);
             },
           ),
         ],
@@ -135,6 +142,17 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => FeedbackScreen()),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title:
+              Text('Settings', style: TextStyle(fontFamily: 'GoogleSans')),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsPage()),
                 );
               },
             ),

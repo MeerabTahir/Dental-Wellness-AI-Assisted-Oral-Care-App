@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import '../login.dart';
 
 class AdminHomePage extends StatefulWidget {
@@ -47,7 +47,17 @@ class _AdminHomePageState extends State<AdminHomePage> {
       });
     }
   }
+  void logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    await FirebaseAuth.instance.signOut();
 
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+          (route) => false,
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -72,15 +82,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         actions: [
           IconButton(
             onPressed: () {
-              FirebaseAuth.instance.signOut().then((value) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                      (route) => false,
-                );
-              }).catchError((e) {
-                print('Error signing out: $e');
-              });
+              logout(context);
             },
             icon: const Icon(Icons.logout),
             tooltip: "Logout",

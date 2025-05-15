@@ -1,16 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Appointment {
-  String id;
-  String doctorId;
-  String doctorName;
-  String patientName;
-  String patientAge;
-  Timestamp timestamp;
-  String userId;
-  String phoneNo;
-  String appointmentDate;
-  String appointmentTime;
+  final String id;
+  final String doctorId;
+  final String doctorName;
+  final String patientName;
+  final String patientAge;
+  final String phoneNo;
+  final Timestamp timestamp;
+  final String userId;
+  final String appointmentDate;
+  final String appointmentTime;
+  // final DateTime appointmentDateTime;
 
   Appointment({
     this.id = '', // Default value
@@ -23,6 +24,7 @@ class Appointment {
     required this.userId,
     required this.appointmentDate,
     required this.appointmentTime,
+    // required this.appointmentDateTime,
 
 
   });
@@ -40,6 +42,8 @@ class Appointment {
       userId: data['userId'] ?? '',
       appointmentDate: data['appointmentDate'] ?? '',
       appointmentTime: data['appointmentTime'] ?? '',
+      // appointmentDateTime: ['appointmentDateTime'] as Timestamp.toDate(),
+
     );
   }
 
@@ -55,6 +59,7 @@ class Appointment {
       'userId': userId,
       'appointmentDate': appointmentDate,
       'appointmentTime': appointmentTime,
+      // 'appointmentDateTime': Timestamp.fromDate(appointmentDateTime),
     };
   }
 }

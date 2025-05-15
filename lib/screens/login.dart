@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tooth_tales/reusable_widgets/reusable_widget.dart';
 import 'package:tooth_tales/screens/signup.dart';
 import 'package:tooth_tales/screens/user/homepage.dart';
@@ -108,12 +109,12 @@ class _LoginScreenState extends State<LoginScreen> {
   void _signInUser() async {
     try {
       UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailTextController.text.trim(),
         password: _passwordTextController.text,
       );
-      String userId = userCredential.user!.uid;
 
+      String userId = userCredential.user!.uid;
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
@@ -122,7 +123,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (userDoc.exists) {
         String userIdFromFirestore = userDoc.get('id').toString();
 
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('uid', userId);
+
         if (userIdFromFirestore == '0') {
+          await prefs.setString('role', 'admin');
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -135,6 +140,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         bool isDoctor = userDoc.get('isDoctor');
         _showCustomSnackBar(context, 'Login successful!', Colors.green);
+
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('role', isDoctor ? 'doctor' : 'user');
+
+
 
         if (isDoctor) {
           Navigator.pushReplacement(
@@ -154,6 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _showCustomSnackBar(context, 'Incorrect credentials', Colors.red);
     }
   }
+
 
   void _resetPassword() {
     Navigator.push(

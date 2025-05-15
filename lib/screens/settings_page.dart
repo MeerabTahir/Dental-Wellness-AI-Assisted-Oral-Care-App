@@ -32,8 +32,11 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Settings'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        title: Text('Settings',style: TextStyle(fontFamily: "GoogleSans", fontSize: 18),),
       ),
       body: ListView(
         padding: EdgeInsets.all(16.0),

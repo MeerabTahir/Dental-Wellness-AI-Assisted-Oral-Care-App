@@ -7,16 +7,15 @@ class EmailService {
     required String recipientName,
     required String password,
   }) async {
-    // **Replace with your Gmail and App Password**
+
     String senderEmail = "meerabt041@gmail.com";
     String senderPassword = "fqrj tprw rtrc spaq";
 
-    // **Set up SMTP Server**
     final smtpServer = SmtpServer(
       'smtp.gmail.com',
       username: senderEmail,
       password: senderPassword,
-      port: 587,  // Use 465 for SSL or 587 for TLS
+      port: 587,
       ssl: false,
       allowInsecure: true,
     );

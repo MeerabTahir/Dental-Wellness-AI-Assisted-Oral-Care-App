@@ -16,7 +16,7 @@ exports.sendDoctorCredentials = functions.https.onCall(async (data, context) => 
   const name = data.name;
 
   const mailOptions = {
-    from: "Tooth Tales <your-email@gmail.com>",
+    from: "Dental Wellness <your-email@gmail.com>",
     to: email,
     subject: "Your Dentist Account Credentials",
     html: `

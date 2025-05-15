@@ -120,7 +120,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
             children: [
               Image.asset(
                 'assets/Images/app.jpg',
-                height: 200,
+                height: 250,
                 fit: BoxFit.cover,
               ),
               const SizedBox(height: 16),
@@ -174,6 +174,13 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
   }
 
   Widget _buildAppointmentList(List<Appointment> appointments) {
+    // Sort appointments in descending order by date (newest first)
+    appointments.sort((a, b) {
+      final dateA = _parseAppointmentDateTime(a.appointmentDate, a.appointmentTime) ?? DateTime(0);
+      final dateB = _parseAppointmentDateTime(b.appointmentDate, b.appointmentTime) ?? DateTime(0);
+      return dateB.compareTo(dateA); // Descending order
+    });
+
     return appointments.isEmpty
         ? const Center(child: Text("No appointments"))
         : ListView.builder(
@@ -218,7 +225,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                     const SizedBox(width: 8),
                     Text(
                       'Date: $formattedDate',
-                      style: const TextStyle(fontSize: 16,fontFamily: "GoogleSans",),
+                      style: const TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
                     ),
                   ],
                 ),
@@ -229,7 +236,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                     const SizedBox(width: 8),
                     Text(
                       'Time: $formattedTime',
-                      style: const TextStyle(fontSize: 16,fontFamily: "GoogleSans",),
+                      style: const TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
                     ),
                   ],
                 ),
@@ -240,7 +247,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                     const SizedBox(width: 8),
                     Text(
                       'Age: ${appointment.patientAge}',
-                      style: const TextStyle(fontSize: 16, fontFamily: "GoogleSans",),
+                      style: const TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
                     ),
                   ],
                 ),
@@ -252,7 +259,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                     Expanded(
                       child: Text(
                         'Phone No: ${appointment.phoneNo}',
-                        style: const TextStyle(fontSize: 16, fontFamily: "GoogleSans",),
+                        style: const TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
                       ),

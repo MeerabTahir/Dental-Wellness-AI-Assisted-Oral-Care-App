@@ -206,16 +206,16 @@ class _ModelProcessingScreenState extends State<ModelProcessingScreen> {
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 8),
-                      if (_confidenceScore != null)
-                        Text(
-                          "Confidence: ${(_confidenceScore! * 100).toStringAsFixed(2)}%",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.blueGrey,
-                            fontFamily: 'GoogleSans',
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                      // if (_confidenceScore != null)
+                      //   Text(
+                      //     "Confidence: ${(_confidenceScore! * 100).toStringAsFixed(2)}%",
+                      //     style: TextStyle(
+                      //       fontSize: 15,
+                      //       color: Colors.blueGrey,
+                      //       fontFamily: 'GoogleSans',
+                      //     ),
+                      //     textAlign: TextAlign.center,
+                      //   ),
                       SizedBox(height: 12),
                       Text(
                         diseaseDescriptions[_detectedDisease ?? 'Healthy'] ?? '',

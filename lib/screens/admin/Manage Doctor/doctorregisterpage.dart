@@ -119,20 +119,18 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
       if (user != null) {
         await user.sendEmailVerification();
 
-        // Save doctor info in Firestore
         String doctorId = user.uid;
         UserAccounts doctorAccount = UserAccounts(
           id: doctorId,
           userName: name,
           isDoctor: true,
-          password: password, // Save password
+          password: password,
         );
 
         await FirestoreService<UserAccounts>('users').addItemWithId(doctorAccount, doctorId);
 
-        // Send email in background (UI remains smooth)
+        // Send email in background
         Future.delayed(Duration.zero, () {
-          print("Sending credentials email..."); // Debug log
           EmailService.sendEmail(
             recipientEmail: email,
             recipientName: name,
@@ -153,12 +151,36 @@ class _DoctorRegisterPageState extends State<DoctorRegisterPage> {
 
         Navigator.pop(context);
       }
-    } catch (error) {
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage = 'This email is already registered. Please use another one.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'The email address is not valid.';
+          break;
+        case 'weak-password':
+          errorMessage = 'The generated password is too weak.';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled.';
+          break;
+        default:
+          errorMessage = 'An error occurred. Please try again.';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $error"), backgroundColor: Colors.red),
+        SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+      );
+    } catch (e) {
+      // For other errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("An unexpected error occurred."), backgroundColor: Colors.red),
       );
     } finally {
-      setState(() => _isLoading = false); // Hide loading indicator
+      setState(() => _isLoading = false);
     }
   }
+
 }

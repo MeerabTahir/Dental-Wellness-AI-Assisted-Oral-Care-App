@@ -171,14 +171,7 @@ class _DescriptionScreenState extends State<DescriptionScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
-        iconTheme: IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.share, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
-      ),
+       ),
       body: doctor == null
           ? const Center(child: CircularProgressIndicator(color: Colors.blue))
           : Column(

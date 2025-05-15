@@ -22,7 +22,15 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   }
 
   void _submitFeedback() async {
-    if (_rating == 0) return;
+    if (_rating == 0 || _commentController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please provide both a rating and a comment."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -39,7 +47,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       'userId': user.uid,
       'userName': username,
       'rating': _rating,
-      'comment': _commentController.text,
+      'comment': _commentController.text.trim(),
       'timestamp': FieldValue.serverTimestamp(),
     };
 
@@ -51,7 +59,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Feedback submitted successfully!")),
+      SnackBar(
+        content: Text("Feedback submitted successfully!"),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -119,7 +130,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   ),
                   onPressed: () {
                     setState(() {
-                      _rating = index + 1;
+                      _rating = _rating == index + 1 ? 0 : index + 1;
                     });
                   },
                 );
@@ -133,6 +144,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 filled: true,
                 fillColor: Colors.grey[200],
               ),
+              maxLines: 3,
             ),
             SizedBox(height: 10),
             Center(
@@ -171,7 +183,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         SizedBox(height: 10),
         Expanded(
           child: StreamBuilder(
-            stream: FirebaseFirestore.instance.collection('feedbacks').orderBy('timestamp', descending: true).snapshots(),
+            stream: FirebaseFirestore.instance
+                .collection('feedbacks')
+                .orderBy('timestamp', descending: true)
+                .snapshots(),
             builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
@@ -197,29 +212,31 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         style: TextStyle(fontFamily: 'GoogleSans', fontWeight: FontWeight.w800, color: Colors.black),
                       ),
                       subtitle: Text(
-                        feedback['comment'] ?? '',
+                        (feedback['comment'] ?? '').toString().trim().isEmpty
+                            ? "No comment provided."
+                            : feedback['comment'],
                         style: TextStyle(fontFamily: 'GoogleSans'),
-
                       ),
                       trailing: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                      Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.lime[50], // Yellow box for rating
-                        borderRadius: BorderRadius.circular(8),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.lime[50],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              "${feedback['rating']} ⭐",
+                              style: TextStyle(
+                                fontFamily: 'GoogleSans',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: Text(
-                        " ${feedback['rating']} ⭐",
-                        style: TextStyle(
-                          fontFamily: 'GoogleSans',
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    ]),
                     ),
                   );
                 }).toList(),

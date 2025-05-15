@@ -5,6 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:tooth_tales/models/appointmentModel.dart';
 import 'package:tooth_tales/screens/footer.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:intl/intl.dart';
+
+import '../../../main.dart';
+
 
 class AppointmentScreen extends StatefulWidget {
   final String doctorId;
@@ -40,6 +47,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   void initState() {
     super.initState();
     _fetchDoctorData();
+    tz.initializeTimeZones();
   }
 
   List<int> availableWeekdays = [];
@@ -139,7 +147,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
         if (availableSubSlots.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("No available slots for this date.")),
+            SnackBar(content: Text("No available slots for this date."),backgroundColor: Colors.red,),
           );
         }
       });
@@ -173,7 +181,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       if (selectedDate == null || selectedSubSlot == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Please select a date and time slot.")),
+          SnackBar(content: Text("Please select a date and time slot."),backgroundColor: Colors.red,),
         );
         return;
       }
@@ -193,26 +201,96 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           phoneNo: _phoneController.text.trim(),
           timestamp: Timestamp.now(),
           userId: FirebaseAuth.instance.currentUser!.uid,
-          appointmentDate: formattedDate,  // Store date in yyyy-MM-dd format
-          appointmentTime: selectedSubSlot!,  // Store time separately
+          appointmentDate: formattedDate,
+          appointmentTime: selectedSubSlot!,
         );
 
+        // Save the appointment first
         DocumentReference docRef = await FirebaseFirestore.instance
             .collection('appointments')
             .add(appointment.toMap());
 
         await docRef.update({'id': docRef.id});
+
+        // Try to schedule notification, but don't let it fail the whole process
+        try {
+          DateTime parseDate = DateFormat('yyyy-MM-dd').parse(appointment.appointmentDate);
+          DateTime parsedTime = DateFormat.jm().parse(appointment.appointmentTime);
+
+          DateTime appointmentDateTime = DateTime(
+            parseDate.year,
+            parseDate.month,
+            parseDate.day,
+            parsedTime.hour,
+            parsedTime.minute,
+          );
+
+          DateTime notifyTime = appointmentDateTime.subtract(Duration(minutes: 13));
+
+          print('Appointment time: $appointmentDateTime');
+          print('Notification scheduled for: $notifyTime');
+
+          await scheduleAppointmentNotification(
+            'Appointment Reminder',
+            'Your appointment with Dr. ${doctorData['userName']} is at ${appointment.appointmentTime}',
+            notifyTime,
+          );
+        } catch (e) {
+          print('Error in notification time calculation: $e');
+        }
+
+        // Navigate regardless of notification success
         Navigator.pushReplacementNamed(context, '/schedule');
       } catch (e) {
         print('Error submitting appointment: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to book appointment. Please try again.")),
+          SnackBar(content: Text("Failed to book appointment. Please try again."),backgroundColor: Colors.red,),
         );
       } finally {
         setState(() => isLoading = false);
       }
     }
   }
+  Future<void> scheduleAppointmentNotification(
+      String title, String body, DateTime scheduledDateTime) async {
+    print('Attempting to schedule notification for: $scheduledDateTime');
+
+    // Check if the time is in the future
+    if (scheduledDateTime.isBefore(DateTime.now())) {
+      print('Notification time is in the past!');
+      return;
+    }
+
+    var androidDetails = AndroidNotificationDetails(
+      'appointment_channel', // Make sure this matches your channel ID
+      'Appointment Reminders',
+      channelDescription: 'Reminders for your upcoming appointments',
+      importance: Importance.max,
+      priority: Priority.high,
+      enableVibration: true,
+      playSound: true,
+    );
+
+    var notificationDetails = NotificationDetails(android: androidDetails);
+
+    try {
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        0, // Notification ID
+        title,
+        body,
+        tz.TZDateTime.from(scheduledDateTime, tz.local),
+        notificationDetails,
+        androidAllowWhileIdle: true,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dateAndTime,
+      );
+      print('Notification scheduled successfully');
+    } catch (e) {
+      print('Error scheduling notification: $e');
+    }
+  }
+
 
 
   @override
@@ -261,6 +339,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                   controller: _nameController,
                   label: 'Patient Name',
                   hint: 'Enter full name',
+                  keyboardType: TextInputType.name,
                   icon: Icons.person,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -281,10 +360,14 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                       return 'Please enter age';
                     }
                     if (int.tryParse(value) == null) {
-                      return 'Please enter a valid number';
+                      return 'Please enter a valid age';
                     }
                     return null;
                   },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(2),
+                  ],
                 ),
                 SizedBox(height: 10),
                 _buildInputField(
@@ -445,4 +528,6 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       }).toList(),
     );
   }
+
+
 }

@@ -7,8 +7,11 @@ class ManageDoctorsPage extends StatefulWidget {
 }
 
 class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
-  bool isLoading = true; // Flag for loading indicator
-  List<Map<String, dynamic>> doctors = []; // List to store doctor data
+  bool isLoading = true;
+  List<Map<String, dynamic>> doctors = [];
+  List<Map<String, dynamic>> filteredDoctors = [];
+  String _selectedSpecialization = 'All';
+  List<String> specializations = ['All'];
 
   @override
   void initState() {
@@ -24,13 +27,25 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
           .get();
 
       if (snapshot.docs.isNotEmpty) {
+        List<Map<String, dynamic>> tempDoctors = snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['docId'] = doc.id;
+          return data;
+        }).toList();
+
+        // Extract unique specializations
+        Set<String> specSet = {'All'};
+        for (var doctor in tempDoctors) {
+          if (doctor['specialization'] != null) {
+            specSet.add(doctor['specialization']);
+          }
+        }
+
         setState(() {
-          doctors = snapshot.docs.map((doc) {
-            final data = doc.data();
-            data['docId'] = doc.id;
-            return data;
-          }).toList();
-          isLoading = false; // Set loading to false once data is fetched
+          doctors = tempDoctors;
+          filteredDoctors = tempDoctors;
+          specializations = specSet.toList();
+          isLoading = false;
         });
       } else {
         setState(() {
@@ -40,39 +55,54 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
     } catch (error) {
       print("Error fetching doctors: $error");
       setState(() {
-        isLoading = false; // Set loading to false in case of error
+        isLoading = false;
       });
     }
   }
 
-  // Function to show Delete Dialog
+  void _filterDoctors(String specialization) {
+    setState(() {
+      _selectedSpecialization = specialization;
+      if (specialization == 'All') {
+        filteredDoctors = doctors;
+      } else {
+        filteredDoctors = doctors.where((doctor) =>
+        doctor['specialization'] == specialization).toList();
+      }
+    });
+  }
+
   void _showDeleteDialog(String docId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Confirm Deletion"),
-        content: const Text("Are you sure you want to delete this doctor?"),
+        content: const Text("Are you sure you want to delete this dentist?"),
         actions: <Widget>[
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text("Cancel"),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel", style: TextStyle(color: Colors.blue)),
           ),
           TextButton(
             onPressed: () async {
-              // Implement your delete logic here
               try {
                 await FirebaseFirestore.instance.collection('users').doc(docId).delete();
                 setState(() {
                   doctors.removeWhere((doctor) => doctor['docId'] == docId);
+                  _filterDoctors(_selectedSpecialization);
                 });
                 Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Dentist deleted successfully')),
+                );
               } catch (e) {
-                print("Error deleting doctor: $e");
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error deleting dentist: $e')),
+                );
               }
             },
-            child: const Text("Delete"),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -80,72 +110,153 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
   }
 
   Widget _buildDoctorItem(Map<String, dynamic> doctor) {
-    String? imageUrl = doctor['profileImage']; // Image URL from Firestore
+    String? imageUrl = doctor['profileImage'];
+    Color specColor = _getSpecializationColor(doctor['specialization'] ?? 'General');
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.blue.shade50.withOpacity(0.2),
-        border: Border.all(color: Colors.blue.shade100),
-      ),
-      child: Row(
-        children: [
-          // Profile Image
-          CircleAvatar(
-            radius: 35,
-            backgroundImage: imageUrl != null && imageUrl.isNotEmpty
-                ? NetworkImage(imageUrl)
-                : const AssetImage('assets/Images/avatar.png') as ImageProvider,
-            child: imageUrl == null || imageUrl.isEmpty
-                ? const Icon(Icons.camera_alt, size: 40, color: Colors.white)
-                : null,
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 16),
-          // Doctor Information
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        children: [
+          // Specialization header
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              color: specColor.withOpacity(0.2),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
               children: [
+                Icon(Icons.medical_services, size: 18, color: specColor),
+                const SizedBox(width: 8),
                 Text(
-                  "Dr. ${doctor['userName'] ?? 'No Name'}",
-                  style: const TextStyle(
-                    fontSize: 18,
+                  doctor['specialization'] ?? 'General Dentistry',
+                  style: TextStyle(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    fontFamily: "GoogleSans",
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${doctor['specialization'] ?? 'N/A'}",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: "GoogleSans",
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${doctor['location'] ?? 'No Location Provided'}",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                    fontFamily: "GoogleSans",
+                    color: specColor,
                   ),
                 ),
               ],
             ),
           ),
-          // Delete Icon
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () {
-              _showDeleteDialog(doctor['docId']);
-            },
+          // Doctor details
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Profile Image
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.blue.shade50,
+                  backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                      ? NetworkImage(imageUrl)
+                      : const AssetImage('assets/Images/avatar.png') as ImageProvider,
+                  child: imageUrl == null || imageUrl.isEmpty
+                      ? const Icon(Icons.person, size: 40, color: Colors.blue)
+                      : null,
+                ),
+                const SizedBox(width: 16),
+                // Doctor Information
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Dr. ${doctor['userName'] ?? 'No Name'}",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "GoogleSans",
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on, size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              doctor['location'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                                fontFamily: "GoogleSans",
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: true,
+                            ),
+                          )
+
+
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.exposure, size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Text(
+                            doctor['experience'] != null && doctor['experience'].toString().isNotEmpty
+                            ? '${doctor['experience']} years of experience'
+                                : '',
+                              style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                              fontFamily: "GoogleSans",
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Delete Button
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.delete, color: Colors.red),
+                  ),
+                  onPressed: () => _showDeleteDialog(doctor['docId']),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Color _getSpecializationColor(String specialization) {
+    final colors = {
+      'Orthodontics': Colors.purple,
+      'Periodontics': Colors.green,
+      'Endodontics': Colors.blue,
+      'Prosthodontics': Colors.orange,
+      'Pediatric Dentistry': Colors.pink,
+      'Oral Surgery': Colors.red,
+    };
+    return colors[specialization] ?? Colors.blue;
   }
 
   @override
@@ -154,69 +265,124 @@ class _ManageDoctorsPageState extends State<ManageDoctorsPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 18),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        foregroundColor: Colors.white,
+        elevation: 0,
         title: const Text(
           "Manage Dentists",
-          style: TextStyle(fontFamily: "GoogleSans", fontSize: 16, color: Colors.white),
+          style: TextStyle(
+            fontSize: 18,
+            fontFamily: "GoogleSans",
+          ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.asset(
-              'assets/Images/dentals.png',
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.contain,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+        children: [
+          // Filter Section
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                const Text(
+                  "Filter Dentists",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontFamily: "GoogleSans",
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: DropdownButton<String>(
+                    value: _selectedSpecialization,
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                    items: specializations.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.blue,
+                            fontFamily: "GoogleSans",
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      _filterDoctors(newValue!);
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Center(
-              child: const Text(
-                "All Dentists",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: "GoogleSans",
+          ),
+          const SizedBox(height: 16),
+          // Content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: filteredDoctors.isEmpty
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/Images/doctors.png',
+                      width: 200,
+                      height: 200,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      "No dentists found",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.bold,
+                        fontFamily: "GoogleSans",
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _selectedSpecialization == 'All'
+                          ? "There are no dentists registered"
+                          : "No dentists for $_selectedSpecialization",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontFamily: "GoogleSans",
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : RefreshIndicator(
+                onRefresh: _fetchDoctors,
+                child: ListView.builder(
+                  itemCount: filteredDoctors.length,
+                  itemBuilder: (context, index) {
+                    return _buildDoctorItem(filteredDoctors[index]);
+                  },
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            Center(
-              child: const Text(
-                "You can see all dentists here.",
-                style: TextStyle(fontSize: 16, fontFamily: "GoogleSans"),
-              ),
-            ),
-            const SizedBox(height: 16),
-            doctors.isEmpty
-                ? const Center(
-              child: Text(
-                "No dentists found",
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: "GoogleSans"),
-              ),
-            )
-                : Expanded(
-              child: ListView.builder(
-                itemCount: doctors.length,
-                itemBuilder: (context, index) {
-                  return _buildDoctorItem(doctors[index]);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

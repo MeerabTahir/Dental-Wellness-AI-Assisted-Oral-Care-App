@@ -79,7 +79,6 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
     }
   }
 
-
   Future<void> _updateProfile() async {
     String? imageUrl = _imageUrl;
     if (_profileImage != null) {
@@ -98,12 +97,10 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
         "location": locationController.text,
         "gender": selectedGender,
         "desc": descController.text,
-        "availability": availability, // Save availability
+        "availability": availability,
         "profileImage": imageUrl,
       });
-
-
-        _showCustomSnackBar(context, 'Profile updated successfully!', Colors.green);
+       _showCustomSnackBar(context, 'Profile updated successfully!', Colors.green);
 
     } catch (e) {
        _showCustomSnackBar(context, 'Error updating profile: $e', Colors.red);
@@ -243,6 +240,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               SizedBox(height: 10),
               TextField(
                 controller: feesController,
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: "Fees",
                   border: OutlineInputBorder(),
@@ -253,6 +251,7 @@ class _DoctorProfilePageState extends State<DoctorProfilePage> {
               SizedBox(height:10),
               TextField(
                 controller: experienceController,
+                keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: "Experience",
                   border: OutlineInputBorder(),

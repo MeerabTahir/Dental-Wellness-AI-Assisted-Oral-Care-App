@@ -14,16 +14,38 @@ class _PatientInfoScreenState extends State<PatientInfoScreen> {
   final TextEditingController _medicalHistoryController = TextEditingController();
   final List<String> _genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
+  // Track validation errors
+  String? _nameError;
+  String? _ageError;
+  String? _genderError;
+
   Future<void> _savePatientInfo() async {
-    if (_nameController.text.isEmpty ||
-        _ageController.text.isEmpty ||
-        _selectedGender == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please fill all required fields'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    // Reset errors
+    setState(() {
+      _nameError = null;
+      _ageError = null;
+      _genderError = null;
+    });
+
+    // Validate fields
+    bool isValid = true;
+
+    if (_nameController.text.isEmpty) {
+      setState(() => _nameError = 'Name is required');
+      isValid = false;
+    }
+
+    if (_ageController.text.isEmpty) {
+      setState(() => _ageError = 'Age is required');
+      isValid = false;
+    }
+
+    if (_selectedGender == null) {
+      setState(() => _genderError = 'Gender is required');
+      isValid = false;
+    }
+
+    if (!isValid) {
       return;
     }
 
@@ -42,7 +64,8 @@ class _PatientInfoScreenState extends State<PatientInfoScreen> {
           'name': _nameController.text,
           'age': _ageController.text,
           'gender': _selectedGender ?? 'Not specified',
-          'medicalHistory': _medicalHistoryController.text,},)),
+          'medicalHistory': _medicalHistoryController.text,
+        })),
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +120,7 @@ class _PatientInfoScreenState extends State<PatientInfoScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   image: DecorationImage(
-                    image: AssetImage('assets/Images/report.png'), // Add your image asset
+                    image: AssetImage('assets/Images/report.png'),
                     fit: BoxFit.contain,
                   ),
                 ),
@@ -127,18 +150,50 @@ class _PatientInfoScreenState extends State<PatientInfoScreen> {
               ),
               SizedBox(height: 24),
 
-              // Form Fields
-              _buildTextField(_nameController, 'Full Name', Icons.person),
+              // Form Fields with validation messages
+              if (_nameError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Text(
+                    _nameError!,
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              _buildTextField(
+                _nameController,
+                'Full Name',
+                Icons.person,
+                hasError: _nameError != null,
+              ),
               SizedBox(height: 16),
+
+              if (_ageError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Text(
+                    _ageError!,
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
               _buildTextField(
                 _ageController,
                 'Age',
                 Icons.calendar_today,
                 keyboardType: TextInputType.number,
+                hasError: _ageError != null,
               ),
+
               SizedBox(height: 16),
 
-              // Gender Dropdown
+              // Gender Dropdown with validation
+              if (_genderError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Text(
+                    _genderError!,
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
               Text(
                 'Gender',
                 style: TextStyle(
@@ -151,7 +206,10 @@ class _PatientInfoScreenState extends State<PatientInfoScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[400]!),
+                  border: Border.all(
+                    color: _genderError != null ? Colors.red : Colors.grey[400]!,
+                    width: 1.0,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: DropdownButtonHideUnderline(
@@ -168,6 +226,7 @@ class _PatientInfoScreenState extends State<PatientInfoScreen> {
                     onChanged: (newValue) {
                       setState(() {
                         _selectedGender = newValue;
+                        _genderError = null; // Clear error when user selects something
                       });
                     },
                   ),
@@ -213,13 +272,16 @@ class _PatientInfoScreenState extends State<PatientInfoScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon,
-      {TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
+  Widget _buildTextField(
+      TextEditingController controller,
+      String label,
+      IconData icon, {
+        TextInputType keyboardType = TextInputType.text,
+        int maxLines = 1,
+        bool hasError = false,
+      }) {
     return TextField(
-      style:
-      const TextStyle(
-          fontSize: 14,
-          fontFamily: 'GoogleSans'),
+      style: const TextStyle(fontSize: 14, fontFamily: 'GoogleSans'),
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
@@ -228,8 +290,37 @@ class _PatientInfoScreenState extends State<PatientInfoScreen> {
         prefixIcon: Icon(icon, color: Colors.blue),
         filled: true,
         fillColor: Colors.grey[50],
-
+        errorText: null, // We're handling errors above the field instead
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: hasError ? Colors.red : Colors.grey[400]!,
+            width: 1.0,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: hasError ? Colors.red : Colors.grey[400]!,
+            width: 1.0,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: hasError ? Colors.red : Colors.blue,
+            width: 2.0,
+          ),
+        ),
       ),
+      onChanged: (value) {
+        // Clear error when user starts typing
+        if (label == 'Full Name' && value.isNotEmpty) {
+          setState(() => _nameError = null);
+        } else if (label == 'Age' && value.isNotEmpty) {
+          setState(() => _ageError = null);
+        }
+      },
     );
   }
 }

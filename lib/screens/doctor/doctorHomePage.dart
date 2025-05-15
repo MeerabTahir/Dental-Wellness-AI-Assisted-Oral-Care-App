@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../login.dart';
 import 'All Appointments/appointmentsPage.dart';
@@ -43,6 +44,17 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       print('Error fetching user data: $e');
     }
   }
+  void logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    await FirebaseAuth.instance.signOut();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+          (route) => false,
+    );
+  }
 
 
 
@@ -66,12 +78,30 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                     fontSize: 22,
                     fontWeight: FontWeight.bold)),
           ],
+
         ),
         leading: IconButton(
           icon: const Icon(Icons.menu),
           color: Colors.black,
           onPressed: () => _scaffoldKey.currentState!.openDrawer(),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              FirebaseAuth.instance.signOut().then((value) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false,
+                );
+              }).catchError((e) {
+                print('Error signing out: $e');
+              });
+            },
+            icon: const Icon(Icons.logout),
+            tooltip: "Logout",
+          ),
+        ],
       ),
       drawer: _buildDrawer(),
       body: SingleChildScrollView(
@@ -261,13 +291,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
             leading: const Icon(Icons.logout),
             title: const Text('Logout', style: TextStyle(fontFamily: "GoogleSans")),
             onTap: () {
-              FirebaseAuth.instance.signOut().then((_) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                      (route) => false,
-                );
-              });
+              logout(context);
             },
           ),
         ],
